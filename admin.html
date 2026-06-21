@@ -722,15 +722,22 @@ function tryUnlock(){
   }
 }
 
+var SESSION_KEY = 'vp-admin-session';
+
+function unlockShell(){
+  sessionStorage.setItem(SESSION_KEY, '1');
+  document.getElementById('lockScreen').classList.add('hidden');
+  document.getElementById('appShell').classList.remove('hidden');
+  boot();
+}
+
 async function tryVerifyTotp(){
   var code = document.getElementById('totpInput').value.replace(/\s/g, '');
   document.getElementById('totpError').textContent = '';
   if(code.length !== 6){ document.getElementById('totpError').textContent = 'Enter the 6-digit code.'; return; }
   var valid = await checkTotp(code);
   if(valid){
-    document.getElementById('lockScreen').classList.add('hidden');
-    document.getElementById('appShell').classList.remove('hidden');
-    boot();
+    unlockShell();
   } else {
     document.getElementById('totpError').textContent = 'Invalid code — try again or wait for the next code.';
     document.getElementById('totpInput').value = '';
@@ -739,6 +746,7 @@ async function tryVerifyTotp(){
 }
 
 function resetToLockScreen(){
+  sessionStorage.removeItem(SESSION_KEY);
   document.getElementById('appShell').classList.add('hidden');
   document.getElementById('lockScreen').classList.remove('hidden');
   document.getElementById('pinInput').value = '';
@@ -749,8 +757,14 @@ function resetToLockScreen(){
   document.getElementById('totpStep').style.display = 'none';
 }
 
-// Check lock on page load
+// Check lock / session on page load
 (function(){
+  if(sessionStorage.getItem(SESSION_KEY) === '1'){
+    document.getElementById('lockScreen').classList.add('hidden');
+    document.getElementById('appShell').classList.remove('hidden');
+    boot();
+    return;
+  }
   var until = getLockUntil();
   if(until && Date.now() < until) startLockCountdown(until);
 })();
