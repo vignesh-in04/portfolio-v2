@@ -461,7 +461,9 @@
 /* ════════════════════════════════════════════════════
    Config / defaults
 ════════════════════════════════════════════════════ */
-var STORAGE_KEY = 'vp-config';
+var STORAGE_KEY  = 'vp-config';
+var JSONBIN_ID   = '6a381557da38895dfee776ef';
+var JSONBIN_RKEY = '$2a$10$78BMRujZ/MWhUVdKeCcyouokMK691uy18hNRqow2nNCbpyBeZj8ny';
 
 var defaultConfig = {
   heroTitle:   'Vigneshprabhu M.',
@@ -520,38 +522,54 @@ var defaultConfig = {
 
 var defaultArtifacts = defaultConfig.artifacts;
 
-function loadConfig(){
+function fillDefaults(c){
+  if(!c.artifacts)     c.artifacts     = defaultConfig.artifacts;
+  if(!c.experience)    c.experience    = defaultConfig.experience;
+  if(!c.skills)        c.skills        = defaultConfig.skills;
+  if(!c.education)     c.education     = defaultConfig.education;
+  if(!c.bioParagraphs) c.bioParagraphs = defaultConfig.bioParagraphs;
+  if(!c.traits)        c.traits        = defaultConfig.traits;
+  if(!c.impactPills)   c.impactPills   = defaultConfig.impactPills;
+  return c;
+}
+
+async function loadConfig(){
+  // 1. Try JSONBin (remote source of truth)
+  try{
+    var res = await fetch('https://api.jsonbin.io/v3/b/'+JSONBIN_ID+'/latest',
+      { headers:{ 'X-Access-Key': JSONBIN_RKEY } });
+    if(res.ok){
+      var data = await res.json();
+      var remote = data.record;
+      if(remote && Object.keys(remote).length > 1){
+        try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(remote)); }catch(e){}
+        return fillDefaults(remote);
+      }
+    }
+  }catch(e){}
+  // 2. Fall back to localStorage
   try{
     var raw = localStorage.getItem(STORAGE_KEY);
-    if(raw){
-      var c = JSON.parse(raw);
-      if(!c.artifacts)     c.artifacts     = defaultConfig.artifacts;
-      if(!c.experience)    c.experience    = defaultConfig.experience;
-      if(!c.skills)        c.skills        = defaultConfig.skills;
-      if(!c.education)     c.education     = defaultConfig.education;
-      if(!c.bioParagraphs) c.bioParagraphs = defaultConfig.bioParagraphs;
-      if(!c.traits)        c.traits        = defaultConfig.traits;
-      if(!c.impactPills)   c.impactPills   = defaultConfig.impactPills;
-      return c;
-    }
-    // try old key
+    if(raw){ var c = JSON.parse(raw); return fillDefaults(c); }
     var oldRaw = localStorage.getItem('portfolio-config');
     if(oldRaw){
       var old = JSON.parse(oldRaw);
-      return Object.assign({}, defaultConfig, {
-        heroTitle:   old.heroTitle  || defaultConfig.heroTitle,
+      return fillDefaults(Object.assign({}, defaultConfig, {
+        heroTitle:   old.heroTitle   || defaultConfig.heroTitle,
         heroTagline: old.heroSubtitle || old.heroTagline || defaultConfig.heroTagline,
         accentColor: old.accentColor || defaultConfig.accentColor,
-        bgColor:     old.bgColor    || defaultConfig.bgColor,
-        avatarUrl:   old.avatarUrl  || '',
-        artifacts:   old.artifacts  || defaultConfig.artifacts
-      });
+        bgColor:     old.bgColor     || defaultConfig.bgColor,
+        avatarUrl:   old.avatarUrl   || '',
+        artifacts:   old.artifacts   || defaultConfig.artifacts
+      }));
     }
   }catch(e){}
   return null;
 }
 
-var cfg = loadConfig();
+// Async init — fetch remote config then render
+loadConfig().then(function(cfg){ applyConfig(cfg); });
+var cfg = null; // kept for legacy refs below
 
 /* ════════════════════════════════════════════════════
    Apply config to DOM
@@ -714,8 +732,6 @@ function renderProjects(artifacts){
     list.appendChild(card);
   });
 }
-
-applyConfig(cfg);
 
 /* ════════════════════════════════════════════════════
    Copy email

@@ -491,10 +491,12 @@
 /* ═══════════════════════════════════════════════════
    Constants & defaults
 ═══════════════════════════════════════════════════ */
-var STORAGE_KEY = 'vp-config';
-var VIEWS_KEY   = 'vp-views';
-var ADMIN_PIN   = '2580';
-var TOTP_SECRET = 'KVHFKRCUNBQUYNYBMFWGS5DJMNQWYZNB';
+var STORAGE_KEY  = 'vp-config';
+var VIEWS_KEY    = 'vp-views';
+var ADMIN_PIN    = '2580';
+var TOTP_SECRET  = 'KVHFKRCUNBQUYNYBMFWGS5DJMNQWYZNB';
+var JSONBIN_ID   = '6a381557da38895dfee776ef';
+var JSONBIN_MKEY = '$2a$10$RCDTbDvYegTt5jCy8uljXeO3jPVEvRmbkDPYcRWFDXfv3XtGW8Qxe';
 
 var defaultArtifacts = [
   { id:'a1', name:'Divi — Cloud Operations Assistant', category:'DevOps Automation',
@@ -600,8 +602,14 @@ function loadConfig(){
 }
 
 function saveConfig(cfg){
-  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg)); return true; }
-  catch(e){ return false; }
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg)); }catch(e){}
+  // Push to JSONBin (async, non-blocking)
+  fetch('https://api.jsonbin.io/v3/b/'+JSONBIN_ID, {
+    method:'PUT',
+    headers:{ 'Content-Type':'application/json', 'X-Master-Key': JSONBIN_MKEY },
+    body: JSON.stringify(cfg)
+  }).catch(function(){});
+  return true;
 }
 
 function getViews(){
