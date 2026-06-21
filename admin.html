@@ -134,6 +134,7 @@
   .stat-num{ font-family:var(--font-display); font-size:26px; font-weight:700; color:var(--accent); line-height:1; margin-bottom:6px; }
   .stat-label{ font-family:var(--font-mono); font-size:10.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.06em; }
   @media(max-width:600px){ .stat-grid{ grid-template-columns:repeat(2,1fr); } }
+  @media(max-width:600px){ .pane-wrap{ padding:20px 16px 90px; } }
 
   .term-block{ background:#060A10; border:1px solid var(--border); border-radius:9px; padding:16px 18px; font-family:var(--font-mono); font-size:12.5px; color:#8B95A5; line-height:1.85; margin-bottom:24px; }
   .term-block .ok{ color:var(--running); }
@@ -289,7 +290,7 @@
           <div style="color:var(--text-faint);">resolving config...</div>
           <div><span class="ok">[OK]</span> config loaded — site is live</div>
         </div>
-        <div class="quick-grid" style="grid-template-columns:repeat(4,1fr);">
+        <div class="quick-grid">
           <div class="quick-card" data-jump="appearance"><div class="quick-title">Appearance</div><div class="quick-sub">Colors &amp; photo</div></div>
           <div class="quick-card" data-jump="hero"><div class="quick-title">Hero</div><div class="quick-sub">Name &amp; tagline</div></div>
           <div class="quick-card" data-jump="about"><div class="quick-title">About</div><div class="quick-sub">Bio &amp; traits</div></div>
