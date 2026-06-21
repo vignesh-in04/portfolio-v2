@@ -95,7 +95,15 @@
   @media(max-width:860px){
     .shell{ flex-direction:column; }
     .sidebar{ width:100%; height:auto; position:static; }
-    .sidenav{ flex-direction:row; flex-wrap:wrap; overflow-y:visible; }
+    .sidenav{
+      flex-direction:row; flex-wrap:nowrap;
+      overflow-x:auto; overflow-y:hidden;
+      scrollbar-width:none; -webkit-overflow-scrolling:touch;
+      padding:4px 8px 8px;
+    }
+    .sidenav::-webkit-scrollbar{ display:none; }
+    .nav-section{ display:none; }
+    .nav-item{ white-space:nowrap; flex-shrink:0; padding:7px 12px; }
     .sidebar-foot{ flex-direction:row; gap:12px; }
   }
 

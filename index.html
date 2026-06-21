@@ -354,6 +354,9 @@
     .cmdnav-inner{ gap:16px; font-size:13.5px; }
     .cond-msg{ display:none; }
   }
+  @media(max-width:640px){
+    #matrixCanvas{ opacity:0.18; }
+  }
 </style>
 </head>
 <body>
@@ -1050,6 +1053,7 @@ if(rmPref){
 }
 
 // Scroll spy
+var currentSpy = '';
 function updateSpy(){
   var current = sections[0] ? sections[0].id : '';
   sections.forEach(function(s){ if(s.getBoundingClientRect().top <= 120) current = s.id; });
@@ -1057,6 +1061,11 @@ function updateSpy(){
     current = sections[sections.length-1].id;
   }
   navLinks.forEach(function(l){ l.classList.toggle('active', l.dataset.target === current); });
+  if(current !== currentSpy){
+    currentSpy = current;
+    var activeLink = document.querySelector('.cmdnav a[data-target="'+current+'"]');
+    if(activeLink) activeLink.scrollIntoView({ inline:'nearest', behavior:'smooth', block:'nearest' });
+  }
 }
 var ticking = false;
 window.addEventListener('scroll', function(){
