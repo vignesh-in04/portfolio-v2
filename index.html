@@ -80,7 +80,7 @@
 
   /* ── BG canvas layer ── */
   .bg-layer{ position:fixed; inset:0; z-index:-1; background:var(--bg); pointer-events:none; }
-  #matrixCanvas{ position:absolute; inset:0; width:100%; height:100%; opacity:0.45; }
+  #matrixCanvas{ position:absolute; inset:0; width:100%; height:100%; opacity:0.22; }
 
   /* ── Particles ── */
   .particle-field{ position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:0; }
@@ -191,7 +191,7 @@
     border-bottom:1px solid var(--border);
     opacity:0; transform:translateY(14px);
     transition:opacity .55s ease, transform .55s ease;
-    position:relative; z-index:1; background:var(--bg);
+    position:relative; z-index:1;
   }
   .section.in{ opacity:1; transform:translateY(0); }
   .section-label{
@@ -411,7 +411,7 @@
 </nav>
 
 <!-- full-width wrapper blocks canvas bleed-through on sides -->
-<div style="position:relative;z-index:1;background:var(--bg);">
+<div style="position:relative;z-index:1;">
 
 <!-- ── metadata ── -->
 <section class="section" id="metadata">
