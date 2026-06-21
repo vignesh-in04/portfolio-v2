@@ -168,13 +168,13 @@
     position:sticky; top:0; z-index:50;
     background:rgba(11,14,19,.92); backdrop-filter:blur(8px);
     border-bottom:1px solid var(--border);
+    overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch;
   }
+  .cmdnav::-webkit-scrollbar{ display:none; }
   .cmdnav-inner{
-    max-width:var(--maxw); margin:0 auto; padding:13px 24px;
-    display:flex; gap:24px; overflow-x:auto; font-family:var(--font-mono); font-size:15px;
-    scrollbar-width:none;
+    padding:13px 24px; width:max-content; min-width:100%;
+    display:flex; gap:24px; font-family:var(--font-mono); font-size:15px;
   }
-  .cmdnav-inner::-webkit-scrollbar{ display:none; }
   .cmdnav a{ color:var(--text-faint); white-space:nowrap; transition:color .2s; }
   .cmdnav a .ni{ color:var(--accent); font-weight:700; margin-right:5px; }
   .cmdnav a:hover{ color:var(--text); }
