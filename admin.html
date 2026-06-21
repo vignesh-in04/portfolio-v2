@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>control-plane — vigneshprabhu/career</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:          #0B0E13;
+    --surface:     #11161D;
+    --surface-2:   #161C25;
+    --surface-3:   #1C2433;
+    --border:      #232B36;
+    --text:        #E7ECF3;
+    --text-dim:    #8B95A5;
+    --text-faint:  #545E6E;
+    --accent:      #4C8DFF;
+    --accent-soft: rgba(76,141,255,0.13);
+    --running:     #3DD68C;
+    --running-soft:rgba(61,214,140,0.12);
+    --danger:      #FF5A5A;
+    --danger-soft: rgba(255,90,90,0.10);
+    --font-display:'Manrope',   sans-serif;
+    --font-body:   'Manrope',   sans-serif;
+    --font-mono:   'Fira Code', monospace;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ background:var(--bg); color:var(--text); font-family:var(--font-body); line-height:1.55; -webkit-font-smoothing:antialiased; }
+  a{ color:var(--accent); text-decoration:none; }
+  ::selection{ background:var(--accent-soft); color:var(--accent); }
+  :focus-visible{ outline:2px solid var(--accent); outline-offset:3px; border-radius:4px; }
+  ::-webkit-scrollbar{ width:4px; height:4px; }
+  ::-webkit-scrollbar-track{ background:var(--bg); }
+  ::-webkit-scrollbar-thumb{ background:var(--border); border-radius:2px; }
+  .hidden{ display:none !important; }
+
+  @keyframes fade-in{ from{ opacity:0; transform:translateY(5px); } to{ opacity:1; transform:translateY(0); } }
+  @keyframes blink-cur{ 0%,100%{ opacity:1; } 50%{ opacity:0; } }
+
+  /* ════════════════════════════════════════
+     LOCK SCREEN
+  ════════════════════════════════════════ */
+  .lock-screen{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; background:var(--bg); }
+  .lock-wrap{ width:100%; max-width:380px; }
+  .lock-brand{ text-align:center; margin-bottom:28px; }
+  .lock-brand .logo{ font-family:var(--font-mono); font-size:28px; font-weight:600; color:var(--text); letter-spacing:-.01em; }
+  .lock-brand .logo span{ color:var(--accent); }
+  .lock-brand .sub{ font-family:var(--font-mono); font-size:12px; color:var(--text-faint); margin-top:6px; letter-spacing:.05em; }
+  .lock-terminal{ background:var(--surface); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+  .lock-terminal-bar{ background:var(--surface-2); border-bottom:1px solid var(--border); padding:12px 16px; display:flex; align-items:center; gap:8px; }
+  .traffic{ width:10px; height:10px; border-radius:50%; background:var(--border); }
+  .traffic.r{ background:#FF5F57; } .traffic.y{ background:#FEBC2E; } .traffic.g{ background:#28C840; }
+  .lock-terminal-title{ flex:1; text-align:center; font-family:var(--font-mono); font-size:12px; color:var(--text-faint); margin-left:-60px; }
+  .lock-terminal-body{ padding:24px 22px 28px; }
+  .term-line{ font-family:var(--font-mono); font-size:13px; color:var(--text-dim); margin-bottom:8px; }
+  .term-line .prompt{ color:var(--accent); margin-right:8px; }
+  .pin-field{ margin:20px 0 6px; display:flex; flex-direction:column; gap:6px; }
+  .pin-label{ font-family:var(--font-mono); font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.1em; }
+  #pinInput{ width:100%; font-family:var(--font-mono); font-size:20px; letter-spacing:.35em; text-align:center; padding:13px 16px; border:1px solid var(--border); border-radius:7px; background:var(--surface-2); color:var(--text); outline:none; transition:border-color .2s; }
+  #pinInput:focus{ border-color:var(--accent); }
+  .pin-error{ font-family:var(--font-mono); font-size:12px; color:var(--danger); min-height:16px; }
+  .lock-btn{ width:100%; margin-top:14px; padding:13px; border-radius:7px; border:none; background:var(--accent); color:#fff; font-family:var(--font-mono); font-size:14px; font-weight:600; cursor:pointer; transition:filter .2s; }
+  .lock-btn:hover{ filter:brightness(1.15); }
+  .lock-foot{ text-align:center; margin-top:18px; font-family:var(--font-mono); font-size:11.5px; color:var(--text-faint); }
+  .lock-foot a{ color:var(--text-faint); transition:color .2s; }
+  .lock-foot a:hover{ color:var(--accent); }
+
+  /* ════════════════════════════════════════
+     SHELL
+  ════════════════════════════════════════ */
+  .shell{ display:flex; min-height:100vh; }
+
+  .sidebar{ width:220px; flex-shrink:0; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; position:sticky; top:0; height:100vh; overflow-y:auto; }
+  .brand{ padding:18px 16px 14px; border-bottom:1px solid var(--border); }
+  .brand-row{ display:flex; align-items:center; gap:9px; margin-bottom:3px; }
+  .brand-icon{ width:22px; height:22px; border-radius:5px; background:var(--accent-soft); display:flex; align-items:center; justify-content:center; }
+  .brand-icon svg{ width:11px; height:11px; color:var(--accent); }
+  .brand-name{ font-family:var(--font-mono); font-size:13px; font-weight:600; color:var(--text); }
+  .brand-sub{ font-family:var(--font-mono); font-size:11px; color:var(--text-faint); padding-left:31px; }
+  .sidenav{ flex:1; padding:12px 8px; display:flex; flex-direction:column; gap:2px; overflow-y:auto; }
+  .nav-section{ font-family:var(--font-mono); font-size:10px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.1em; padding:8px 10px 4px; }
+  .nav-item{ display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:7px; font-family:var(--font-mono); font-size:13px; color:var(--text-dim); cursor:pointer; transition:background .15s, color .15s; user-select:none; }
+  .nav-item:hover{ background:var(--surface-2); color:var(--text); }
+  .nav-item.active{ background:var(--accent-soft); color:var(--accent); }
+  .nav-item .ni{ width:6px; height:6px; border-radius:2px; background:var(--text-faint); flex-shrink:0; transition:background .15s; }
+  .nav-item.active .ni{ background:var(--accent); }
+  .sidebar-foot{ padding:12px 14px 16px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:6px; }
+  .sidebar-link{ font-family:var(--font-mono); font-size:12px; color:var(--text-faint); display:flex; align-items:center; gap:6px; padding:4px; border-radius:5px; transition:color .15s; cursor:pointer; }
+  .sidebar-link:hover{ color:var(--accent); }
+  .sidebar-link.danger:hover{ color:var(--danger); }
+
+  @media(max-width:860px){
+    .shell{ flex-direction:column; }
+    .sidebar{ width:100%; height:auto; position:static; }
+    .sidenav{ flex-direction:row; flex-wrap:wrap; overflow-y:visible; }
+    .sidebar-foot{ flex-direction:row; gap:12px; }
+  }
+
+  .main{ flex:1; min-width:0; display:flex; flex-direction:column; }
+  .main-top{ position:sticky; top:0; z-index:20; background:rgba(11,14,19,.92); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); padding:14px 28px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .crumb{ font-family:var(--font-mono); font-size:12px; color:var(--text-faint); }
+  .crumb b{ color:var(--text); font-weight:600; }
+  .top-right{ display:flex; align-items:center; gap:10px; }
+  .save-status{ font-family:var(--font-mono); font-size:12px; min-width:80px; text-align:right; }
+
+  .btn{ font-family:var(--font-mono); font-size:13px; padding:9px 16px; border-radius:7px; border:1px solid var(--border); display:inline-flex; align-items:center; gap:7px; transition:all .2s; cursor:pointer; background:var(--surface-2); color:var(--text-dim); }
+  .btn-primary{ background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600; }
+  .btn-primary:hover{ filter:brightness(1.12); }
+  .btn-ghost:hover{ border-color:var(--accent); color:var(--accent); }
+  .btn-danger{ color:var(--danger); border-color:rgba(255,90,90,.3); background:transparent; }
+  .btn-danger:hover{ background:var(--danger-soft); }
+  .btn-sm{ font-size:12px; padding:6px 10px; }
+
+  .pane-wrap{ max-width:740px; margin:0 auto; padding:28px 28px 90px; }
+  .pane{ display:none; animation:fade-in .3s ease both; }
+  .pane.active{ display:block; }
+  .pane-title{ font-family:var(--font-display); font-size:22px; font-weight:700; margin-bottom:5px; }
+  .pane-desc{ font-size:14px; color:var(--text-dim); margin-bottom:28px; max-width:500px; }
+  .pane-section-label{ font-family:var(--font-mono); font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.1em; margin:24px 0 14px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+
+  .stat-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:24px; }
+  .stat-card{ background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px; }
+  .stat-num{ font-family:var(--font-display); font-size:26px; font-weight:700; color:var(--accent); line-height:1; margin-bottom:6px; }
+  .stat-label{ font-family:var(--font-mono); font-size:10.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.06em; }
+  @media(max-width:600px){ .stat-grid{ grid-template-columns:repeat(2,1fr); } }
+
+  .term-block{ background:#060A10; border:1px solid var(--border); border-radius:9px; padding:16px 18px; font-family:var(--font-mono); font-size:12.5px; color:#8B95A5; line-height:1.85; margin-bottom:24px; }
+  .term-block .ok{ color:var(--running); }
+  .term-block .cur{ display:inline-block; width:7px; height:13px; background:var(--running); vertical-align:middle; margin-left:2px; animation:blink-cur 1s step-end infinite; }
+
+  .quick-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+  .quick-card{ background:var(--surface); border:1px solid var(--border); border-radius:9px; padding:14px 16px; cursor:pointer; transition:border-color .2s, transform .2s; }
+  .quick-card:hover{ border-color:var(--accent); transform:translateY(-2px); }
+  .quick-title{ font-weight:700; font-size:14px; margin-bottom:3px; }
+  .quick-sub{ font-size:12px; color:var(--text-faint); }
+  @media(max-width:500px){ .quick-grid{ grid-template-columns:1fr; } }
+
+  .field{ margin-bottom:16px; }
+  .field label{ display:block; font-family:var(--font-mono); font-size:11px; color:var(--text-faint); margin-bottom:7px; text-transform:uppercase; letter-spacing:.08em; }
+  .field .hint{ font-size:12.5px; color:var(--text-faint); margin-top:6px; line-height:1.5; }
+  .text-input, .text-area{ width:100%; font-family:var(--font-body); font-size:14px; padding:11px 14px; border:1px solid var(--border); border-radius:8px; background:var(--surface-2); color:var(--text); outline:none; transition:border-color .2s; }
+  .text-input:focus, .text-area:focus{ border-color:var(--accent); }
+  .text-area{ min-height:80px; resize:vertical; }
+
+  .color-row{ display:flex; align-items:center; gap:12px; }
+  input[type=color]{ width:50px; height:38px; border:1px solid var(--border); border-radius:7px; padding:2px; background:var(--surface-2); cursor:pointer; }
+  .color-hex{ font-family:var(--font-mono); font-size:13px; color:var(--text-dim); }
+
+  .card{ background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px; margin-bottom:12px; }
+  .card:last-child{ margin-bottom:0; }
+  .card-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+  .card-head .lbl{ font-family:var(--font-mono); font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.06em; }
+  .card .field{ margin-bottom:10px; }
+  .card .field:last-child{ margin-bottom:0; }
+
+  .two-col{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  @media(max-width:500px){ .two-col{ grid-template-columns:1fr; } }
+
+  .bullet-wrap{ display:flex; gap:6px; margin-bottom:6px; }
+  .bullet-wrap:last-child{ margin-bottom:0; }
+
+  .pill-row{ display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+
+  .skill-row{ display:flex; gap:10px; align-items:center; padding:12px 16px; background:var(--surface); border:1px solid var(--border); border-radius:9px; margin-bottom:8px; }
+  .skill-row:last-child{ margin-bottom:0; }
+
+  .save-bar{ position:sticky; bottom:0; background:var(--bg); padding:16px 0 0; margin-top:8px; display:flex; gap:10px; align-items:center; }
+
+  @media(prefers-reduced-motion:reduce){ *{ animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+
+<!-- LOCK SCREEN -->
+<div id="lockScreen" class="lock-screen">
+  <div class="lock-wrap">
+    <div class="lock-brand">
+      <div class="logo">control<span>-plane</span></div>
+      <div class="sub">vigneshprabhu / career</div>
+    </div>
+    <div class="lock-terminal">
+      <div class="lock-terminal-bar">
+        <span class="traffic r"></span><span class="traffic y"></span><span class="traffic g"></span>
+        <span class="lock-terminal-title">bash — 80×24</span>
+      </div>
+      <div class="lock-terminal-body">
+        <div class="term-line"><span class="prompt">$</span> control-plane authenticate</div>
+        <div class="term-line" style="color:var(--text-faint);margin-bottom:16px;">Enter PIN to unlock admin access.</div>
+        <div class="pin-field">
+          <span class="pin-label">Access PIN</span>
+          <input type="password" id="pinInput" placeholder="••••" inputmode="numeric" maxlength="8" autocomplete="current-password">
+        </div>
+        <div class="pin-error" id="pinError"></div>
+        <button class="lock-btn" id="pinSubmit">unlock →</button>
+      </div>
+    </div>
+    <div class="lock-foot">session-only · <a href="index.html" target="_blank" rel="noopener">view site ↗</a></div>
+  </div>
+</div>
+
+<!-- APP SHELL -->
+<div id="appShell" class="shell hidden">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-row">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </div>
+        <span class="brand-name">control-plane</span>
+      </div>
+      <div class="brand-sub">vigneshprabhu / career</div>
+    </div>
+
+    <nav class="sidenav">
+      <div class="nav-section">System</div>
+      <div class="nav-item active" data-pane="overview"><span class="ni"></span>Overview</div>
+      <div class="nav-item" data-pane="appearance"><span class="ni"></span>Appearance</div>
+      <div class="nav-section">Content</div>
+      <div class="nav-item" data-pane="hero"><span class="ni"></span>Hero</div>
+      <div class="nav-item" data-pane="about"><span class="ni"></span>About</div>
+      <div class="nav-item" data-pane="experience"><span class="ni"></span>Experience</div>
+      <div class="nav-item" data-pane="skills"><span class="ni"></span>Skills</div>
+      <div class="nav-item" data-pane="projects"><span class="ni"></span>Projects</div>
+      <div class="nav-item" data-pane="education"><span class="ni"></span>Education</div>
+      <div class="nav-item" data-pane="contact"><span class="ni"></span>Contact</div>
+      <div class="nav-section">Data</div>
+      <div class="nav-item" data-pane="analytics"><span class="ni"></span>Analytics</div>
+    </nav>
+
+    <div class="sidebar-foot">
+      <a class="sidebar-link" href="index.html" target="_blank" rel="noopener">View live site ↗</a>
+      <span class="sidebar-link danger" id="lockBtn">Lock session</span>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="main-top">
+      <div class="crumb">control-plane / <b id="crumbPane">overview</b></div>
+      <div class="top-right">
+        <button class="btn" id="undoBtn" title="Undo last save" disabled style="opacity:.4;">↩ Undo</button>
+        <button class="btn" id="redoBtn" title="Redo" disabled style="opacity:.4;">↪ Redo</button>
+        <span class="save-status" id="saveStatus"></span>
+        <button class="btn btn-primary" id="saveBtn">Save all</button>
+      </div>
+    </div>
+
+    <div class="pane-wrap">
+
+      <!-- OVERVIEW -->
+      <section class="pane active" data-pane="overview">
+        <div class="pane-title">Overview</div>
+        <p class="pane-desc">Portfolio status at a glance. Use the quick links to jump to any section.</p>
+        <div class="stat-grid">
+          <div class="stat-card"><div class="stat-num" id="ovViews">—</div><div class="stat-label">page views</div></div>
+          <div class="stat-card"><div class="stat-num" id="ovProjects">—</div><div class="stat-label">projects</div></div>
+          <div class="stat-card"><div class="stat-num" id="ovExp">—</div><div class="stat-label">experience</div></div>
+          <div class="stat-card"><div class="stat-num" id="ovSaved" style="font-size:12px;padding-top:5px;">—</div><div class="stat-label">last saved</div></div>
+        </div>
+        <div class="term-block">
+          <div>$ control-plane status<span class="cur"></span></div>
+          <div style="color:var(--text-faint);">resolving config...</div>
+          <div><span class="ok">[OK]</span> config loaded — site is live</div>
+        </div>
+        <div class="quick-grid" style="grid-template-columns:repeat(4,1fr);">
+          <div class="quick-card" data-jump="appearance"><div class="quick-title">Appearance</div><div class="quick-sub">Colors &amp; photo</div></div>
+          <div class="quick-card" data-jump="hero"><div class="quick-title">Hero</div><div class="quick-sub">Name &amp; tagline</div></div>
+          <div class="quick-card" data-jump="about"><div class="quick-title">About</div><div class="quick-sub">Bio &amp; traits</div></div>
+          <div class="quick-card" data-jump="experience"><div class="quick-title">Experience</div><div class="quick-sub">Container cards</div></div>
+          <div class="quick-card" data-jump="skills"><div class="quick-title">Skills</div><div class="quick-sub">Condition table</div></div>
+          <div class="quick-card" data-jump="projects"><div class="quick-title">Projects</div><div class="quick-sub">Project cards</div></div>
+          <div class="quick-card" data-jump="education"><div class="quick-title">Education</div><div class="quick-sub">Volume boxes</div></div>
+          <div class="quick-card" data-jump="contact"><div class="quick-title">Contact</div><div class="quick-sub">Email &amp; links</div></div>
+        </div>
+      </section>
+
+      <!-- APPEARANCE -->
+      <section class="pane" data-pane="appearance">
+        <div class="pane-title">Appearance</div>
+        <p class="pane-desc">Visual settings applied to the live site on next load.</p>
+        <div class="field">
+          <label>Accent color</label>
+          <div class="color-row"><input type="color" id="accentColorInput"><span class="color-hex" id="accentColorHex">#4C8DFF</span></div>
+          <p class="hint">Nav highlights, links, and interactive elements.</p>
+        </div>
+        <div class="field">
+          <label>Background color</label>
+          <div class="color-row"><input type="color" id="bgColorInput"><span class="color-hex" id="bgColorHex">#0B0E13</span></div>
+          <p class="hint">Keep dark — the theme is built for dark backgrounds.</p>
+        </div>
+        <div class="field">
+          <label>Profile photo URL</label>
+          <input type="text" id="avatarUrlInput" class="text-input" placeholder="https://... (public image URL)">
+        </div>
+        <div class="field">
+          <label>Or upload from device</label>
+          <input type="file" id="avatarFileInput" accept="image/*" style="font-family:var(--font-mono);font-size:12px;color:var(--text-dim);">
+          <p class="hint">Max ~1.5 MB. Stored as base64 in localStorage.</p>
+        </div>
+        <div class="save-bar">
+          <button class="btn btn-primary" data-save>Save changes</button>
+          <span class="save-status" id="ss-appearance"></span>
+        </div>
+      </section>
+
+      <!-- HERO -->
+      <section class="pane" data-pane="hero">
+        <div class="pane-title">Hero</div>
+        <p class="pane-desc">The name and tagline shown in the hero section. Keep the tagline short and punchy.</p>
+        <div class="field"><label>Your name</label><input type="text" id="heroTitleInput" class="text-input"></div>
+        <div class="field">
+          <label>Tagline</label>
+          <textarea id="heroTaglineInput" class="text-area" style="min-height:64px;"></textarea>
+          <p class="hint">The word "Running" in the default gets a green highlight automatically — keep it meaningful.</p>
+        </div>
+        <div class="pane-section-label">Impact pills (hero stats)</div>
+        <p class="pane-desc" style="margin-bottom:14px;">Small key=value badges shown below the tagline.</p>
+        <div id="pillList"></div>
+        <button class="btn btn-ghost" id="addPillBtn" style="margin-top:10px;">+ Add pill</button>
+        <div class="save-bar">
+          <button class="btn btn-primary" data-save>Save changes</button>
+          <span class="save-status" id="ss-hero"></span>
+        </div>
+      </section>
+
+      <!-- ABOUT -->
+      <section class="pane" data-pane="about">
+        <div class="pane-title">About</div>
+        <p class="pane-desc">The bio and trait cards shown in the Metadata section.</p>
+        <div class="pane-section-label">Bio</div>
+        <div class="field"><label>Paragraph 1</label><textarea id="bio1Input" class="text-area" style="min-height:90px;"></textarea></div>
+        <div class="field"><label>Paragraph 2</label><textarea id="bio2Input" class="text-area" style="min-height:90px;"></textarea></div>
+        <div class="field"><label>Paragraph 3 <span style="opacity:.5;font-size:10px;">(optional)</span></label><textarea id="bio3Input" class="text-area" style="min-height:90px;"></textarea></div>
+        <div class="pane-section-label">Trait cards</div>
+        <p class="pane-desc" style="margin-bottom:14px;">Three character trait cards. Icons are fixed — only title and description are editable.</p>
+        <div class="card" style="margin-bottom:10px;">
+          <div class="card-head"><span class="lbl">trait · 01 — curiosity icon</span></div>
+          <div class="field"><label>Title</label><input type="text" id="trait1Title" class="text-input"></div>
+          <div class="field" style="margin-bottom:0;"><label>Description</label><textarea id="trait1Desc" class="text-area" style="min-height:60px;"></textarea></div>
+        </div>
+        <div class="card" style="margin-bottom:10px;">
+          <div class="card-head"><span class="lbl">trait · 02 — target icon</span></div>
+          <div class="field"><label>Title</label><input type="text" id="trait2Title" class="text-input"></div>
+          <div class="field" style="margin-bottom:0;"><label>Description</label><textarea id="trait2Desc" class="text-area" style="min-height:60px;"></textarea></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><span class="lbl">trait · 03 — shield icon</span></div>
+          <div class="field"><label>Title</label><input type="text" id="trait3Title" class="text-input"></div>
+          <div class="field" style="margin-bottom:0;"><label>Description</label><textarea id="trait3Desc" class="text-area" style="min-height:60px;"></textarea></div>
+        </div>
+        <div class="save-bar">
+          <button class="btn btn-primary" data-save>Save changes</button>
+          <span class="save-status" id="ss-about"></span>
+        </div>
+      </section>
+
+      <!-- EXPERIENCE -->
+      <section class="pane" data-pane="experience">
+        <div class="pane-title">Experience</div>
+        <p class="pane-desc">Shown as container cards. Leave <b>End date</b> blank for a "Running" (green) badge.</p>
+        <div id="expList"></div>
+        <button class="btn btn-ghost" id="addExpBtn" style="margin-top:14px;">+ Add experience</button>
+        <div class="save-bar">
+          <button class="btn btn-primary" data-save>Save changes</button>
+          <span class="save-status" id="ss-experience"></span>
+        </div>
+      </section>
+
+      <!-- SKILLS -->
+      <section class="pane" data-pane="skills">
+        <div class="pane-title">Skills</div>
+        <p class="pane-desc">Each row is one condition in the skills table. Label is the category name; Tools is the detail shown after the Unknown→Ready flip.</p>
+        <div id="skillList"></div>
+        <button class="btn btn-ghost" id="addSkillBtn" style="margin-top:14px;">+ Add skill row</button>
+        <div class="save-bar">
+          <button class="btn btn-primary" data-save>Save changes</button>
+          <span class="save-status" id="ss-skills"></span>
+        </div>
+      </section>
+
+      <!-- PROJECTS -->
+      <section class="pane" data-pane="projects">
+        <div class="pane-title">Projects</div>
+        <p class="pane-desc">Shown as project cards. Category, stack, GitHub link, and live link are all optional.</p>
+        <div id="artifactList"></div>
+        <button class="btn btn-ghost" id="addArtifactBtn" style="margin-top:14px;">+ Add project</button>
+        <div class="save-bar">
+          <button class="btn btn-primary" data-save>Save changes</button>
+          <span class="save-status" id="ss-projects"></span>
+        </div>
+      </section>
+
+      <!-- EDUCATION -->
+      <section class="pane" data-pane="education">
+        <div class="pane-title">Education</div>
+        <p class="pane-desc">Shown as volume-box style entries. Score field is optional.</p>
+        <div id="eduList"></div>
+        <button class="btn btn-ghost" id="addEduBtn" style="margin-top:14px;">+ Add education</button>
+        <div class="save-bar">
+          <button class="btn btn-primary" data-save>Save changes</button>
+          <span class="save-status" id="ss-education"></span>
+        </div>
+      </section>
+
+      <!-- CONTACT -->
+      <section class="pane" data-pane="contact">
+        <div class="pane-title">Contact</div>
+        <p class="pane-desc">Shown in the contact section as a YAML block.</p>
+        <div class="field"><label>Email</label><input type="email" id="contactEmailInput" class="text-input" placeholder="you@email.com"></div>
+        <div class="field"><label>LinkedIn URL</label><input type="url" id="contactLinkedinInput" class="text-input" placeholder="https://linkedin.com/in/..."></div>
+        <div class="field"><label>LinkedIn display label</label><input type="text" id="contactLinkedinLabelInput" class="text-input" placeholder="linkedin.com/in/yourname"></div>
+        <div class="field"><label>Phone <span style="opacity:.5;font-size:10px;">(optional)</span></label><input type="tel" id="contactPhoneInput" class="text-input" placeholder="+91 ..."></div>
+        <div class="save-bar">
+          <button class="btn btn-primary" data-save>Save changes</button>
+          <span class="save-status" id="ss-contact"></span>
+        </div>
+      </section>
+
+      <!-- ANALYTICS -->
+      <section class="pane" data-pane="analytics">
+        <div class="pane-title">Analytics</div>
+        <p class="pane-desc">View tracking stored in the visitor's browser localStorage. Only counts loads in their specific browser.</p>
+        <div class="stat-grid" style="grid-template-columns:1fr;">
+          <div class="stat-card"><div class="stat-num" id="analyticsViews">—</div><div class="stat-label">total page loads since launch</div></div>
+        </div>
+        <div style="margin-top:16px;">
+          <button class="btn btn-ghost" id="resetViewsBtn">Reset counter</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   Constants & defaults
+═══════════════════════════════════════════════════ */
+var STORAGE_KEY = 'vp-config';
+var VIEWS_KEY   = 'vp-views';
+var ADMIN_PIN   = '2580';
+
+var defaultArtifacts = [
+  { id:'a1', name:'Divi — Cloud Operations Assistant', category:'DevOps Automation',
+    desc:'Built a Slack-integrated cloud operations assistant to manage EC2 infrastructure workflows, including instance control, status monitoring, and AI-assisted downtime log analysis using AWS Lambda, CloudWatch logs, and OpenAI API integrations.',
+    stack:'AWS Lambda · CloudWatch · OpenAI API · Slack Commands · Serverless', github:'https://github.com/vignesh-in04', live:'' },
+  { id:'a2', name:'Multi-Client AWS Billing Dashboard', category:'AWS Automation',
+    desc:'Built a centralized AWS billing dashboard to monitor cloud expenditure trends across multiple environments using cross-account IAM roles and automated cost collection workflows.',
+    stack:'AWS Lambda · Cross-Account IAM · Billing Analytics · VPC Peering · OpenVPN', github:'https://github.com/vignesh-in04', live:'' },
+  { id:'a3', name:'Infrastructure Cost Optimization Analyzer', category:'DevOps Automation',
+    desc:'Developed an AI-assisted infrastructure cost optimization analyzer that used historical host metrics from the New Relic API and rule-based decision workflows to recommend cost-optimized infrastructure sizing strategies.',
+    stack:'AI Workflows · New Relic API · Infrastructure Analytics · Cost Optimization · Automation', github:'https://github.com/vignesh-in04', live:'' }
+];
+
+var defaultConfig = {
+  accentColor: '#4C8DFF',
+  bgColor: '#0B0E13',
+  avatarUrl: '',
+  heroTitle: 'Vigneshprabhu M.',
+  heroTagline: 'Keeping cloud infrastructure Running, not just deployed.',
+  impactPills: [
+    { key:'prod-deployed', value:'7' },
+    { key:'cost-saved', value:'$1500 USD' },
+    { key:'stack', value:'AWS|Docker|K8s' },
+    { key:'incidents-resolved', value:'10+' }
+  ],
+  bioParagraphs: [
+    '"I\'m a DevOps Engineer from Coimbatore, Tamil Nadu, currently working at Cyces Innovation Labs LLP in Chennai since June 2025. I enjoy understanding how systems work behind the scenes and solving practical infrastructure and operational challenges."',
+    '"What interests me most about DevOps is the balance between development, infrastructure, automation, and reliability. I like exploring how small improvements in workflows, deployment processes, and system design can make systems easier to manage and more dependable over time."',
+    '"I\'m someone who enjoys learning deeply, building thoughtfully and improving step by step. And I believe good infrastructure should be simple to manage, reliable under pressure, and designed with long-term maintainability in mind."'
+  ],
+  traits: [
+    { title:'Deeply Curious', desc:'Always eager to understand how systems work internally rather than just using them at the surface level.' },
+    { title:'Purpose-Driven', desc:'Believes technology should solve real problems, create meaningful impact, and continuously improve people and systems.' },
+    { title:'Strong Work Ethic', desc:'Values integrity, accountability, and consistency while building reliable systems and meaningful relationships.' }
+  ],
+  experience: [
+    { id:'e1', role:'devops-engineer', company:'Cyces Innovation Labs', startDate:'2025-10-01', endDate:'', duration:'',
+      bullets:['Operates AWS, GCP, and Kubernetes environments — deployments, infra ops, reliability.','Owns monitoring and incident investigation, cutting downtime through observability.','Builds toward secure, repeatable engineering workflows across client environments.','Extends infrastructure automation using Terraform and IaC practices.'] },
+    { id:'e2', role:'devops-engineer-intern', company:'Cyces Innovation Labs', startDate:'2025-06-23', endDate:'2025-09-30', duration:'3 months',
+      bullets:['First hands-on exposure to cloud infrastructure and AWS-based DevOps workflows.','Cut costs across multiple client environments via right-sizing — no performance trade-off.'] }
+  ],
+  skills: [
+    { label:'Containers & Orchestration', tools:'Docker · Docker Compose · Kubernetes · EKS' },
+    { label:'Cloud & Infrastructure',     tools:'AWS · GCP · Terraform · Lambda · IAM' },
+    { label:'Automation & CI/CD',         tools:'GitHub Actions · Jenkins · CI/CD Pipelines' },
+    { label:'Monitoring & Observability', tools:'Grafana · Prometheus · New Relic · CloudWatch' },
+    { label:'OS & Tools',                 tools:'Linux · Git · Helm · kubectl' },
+    { label:'Scripting',                  tools:'Python · Bash' }
+  ],
+  education: [
+    { id:'d1', degree:'B.E. Electronics and Communication Engineering', institution:'Madras Institute of Technology', duration:'2022 – 2025', score:'CGPA: 7.89', level:'Undergraduate' },
+    { id:'d2', degree:'Diploma in Electrical and Electronics Engineering', institution:'Nachimuthu Polytechnic College', duration:'2019 – 2022', score:'93.14%', level:'Diploma' }
+  ],
+  artifacts: defaultArtifacts,
+  contactEmail: 'vigneshprabhuvp44@gmail.com',
+  contactLinkedin: 'https://linkedin.com/in/vigneshprabhum',
+  contactLinkedinLabel: 'linkedin.com/in/vigneshprabhum',
+  contactPhone: '',
+  updatedAt: null
+};
+
+var config = null;
+
+/* ═══════════════════════════════════════════════════
+   Helpers
+═══════════════════════════════════════════════════ */
+function esc(s){
+  var d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML;
+}
+
+function loadConfig(){
+  try{
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      var c = JSON.parse(raw);
+      if(!c.artifacts)    c.artifacts    = defaultConfig.artifacts;
+      if(!c.experience)   c.experience   = defaultConfig.experience;
+      if(!c.skills)       c.skills       = defaultConfig.skills;
+      if(!c.education)    c.education    = defaultConfig.education;
+      if(!c.bioParagraphs)c.bioParagraphs= defaultConfig.bioParagraphs;
+      if(!c.traits)       c.traits       = defaultConfig.traits;
+      if(!c.impactPills)  c.impactPills  = defaultConfig.impactPills;
+      return c;
+    }
+    // fall back to old key
+    var old = JSON.parse(localStorage.getItem('portfolio-config') || 'null');
+    if(old){
+      return Object.assign({}, defaultConfig, {
+        accentColor: old.accentColor || defaultConfig.accentColor,
+        bgColor:     old.bgColor     || defaultConfig.bgColor,
+        avatarUrl:   old.avatarUrl   || '',
+        heroTitle:   old.heroTitle   || defaultConfig.heroTitle,
+        heroTagline: old.heroSubtitle || old.heroTagline || defaultConfig.heroTagline,
+        contactEmail: old.contactEmail || defaultConfig.contactEmail,
+        contactLinkedin: old.contactLinkedin || defaultConfig.contactLinkedin,
+        contactLinkedinLabel: old.contactLinkedinLabel || defaultConfig.contactLinkedinLabel,
+        contactPhone: old.contactPhone || '',
+        artifacts: old.artifacts || defaultConfig.artifacts
+      });
+    }
+  }catch(e){}
+  return JSON.parse(JSON.stringify(defaultConfig));
+}
+
+function saveConfig(cfg){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg)); return true; }
+  catch(e){ return false; }
+}
+
+function getViews(){
+  try{ return parseInt(localStorage.getItem(VIEWS_KEY)||'0', 10) || 0; }
+  catch(e){ return 0; }
+}
+
+function flashSave(ids, ok){
+  ids.forEach(function(id){
+    var el = document.getElementById(id); if(!el) return;
+    el.style.color = ok ? 'var(--running)' : 'var(--danger)';
+    el.textContent = ok ? 'Saved ✓' : 'Save failed';
+  });
+  setTimeout(function(){
+    ids.forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent=''; });
+  }, 2600);
+}
+
+/* ═══════════════════════════════════════════════════
+   Lock screen — 3-attempt lockout for 15 minutes
+═══════════════════════════════════════════════════ */
+var LOCK_KEY    = 'vp-admin-lock';
+var ATTEMPT_KEY = 'vp-admin-attempts';
+var lockTimer   = null;
+
+function getLockUntil(){ try{ return parseInt(localStorage.getItem(LOCK_KEY)||'0',10)||0; }catch(e){ return 0; } }
+function getAttempts(){  try{ return parseInt(localStorage.getItem(ATTEMPT_KEY)||'0',10)||0; }catch(e){ return 0; } }
+function setAttempts(n){ try{ localStorage.setItem(ATTEMPT_KEY,String(n)); }catch(e){} }
+function clearLock(){    try{ localStorage.removeItem(LOCK_KEY); localStorage.removeItem(ATTEMPT_KEY); }catch(e){} }
+
+function startLockCountdown(until){
+  var pinInput  = document.getElementById('pinInput');
+  var pinSubmit = document.getElementById('pinSubmit');
+  var pinError  = document.getElementById('pinError');
+  pinInput.disabled  = true;
+  pinSubmit.disabled = true;
+  pinInput.value     = '';
+  pinError.textContent = '';
+
+  var msg = document.getElementById('lockoutMsg');
+  if(!msg){
+    msg = document.createElement('div');
+    msg.id = 'lockoutMsg';
+    msg.style.cssText = 'margin-top:16px;padding:14px 16px;background:rgba(255,90,90,0.09);border:1px solid rgba(255,90,90,0.28);border-radius:8px;font-family:var(--font-mono);font-size:12px;color:var(--danger);text-align:center;line-height:1.7;';
+    document.querySelector('.lock-terminal-body').appendChild(msg);
+  }
+
+  function tick(){
+    var rem = until - Date.now();
+    if(rem <= 0){
+      clearInterval(lockTimer);
+      clearLock();
+      pinInput.disabled  = false;
+      pinSubmit.disabled = false;
+      msg.remove();
+      pinInput.focus();
+      return;
+    }
+    var m = Math.floor(rem/60000);
+    var s = Math.floor((rem%60000)/1000);
+    msg.innerHTML = '[LOCKOUT] Too many failed attempts.<br>Retry in <b>'+m+'m '+(s<10?'0':'')+s+'s</b>';
+  }
+  tick();
+  lockTimer = setInterval(tick, 1000);
+}
+
+function tryUnlock(){
+  var until = getLockUntil();
+  if(until && Date.now() < until){ startLockCountdown(until); return; }
+
+  var val = document.getElementById('pinInput').value;
+  document.getElementById('pinError').textContent = '';
+
+  if(val === ADMIN_PIN){
+    clearLock();
+    document.getElementById('lockScreen').classList.add('hidden');
+    document.getElementById('appShell').classList.remove('hidden');
+    boot();
+  } else {
+    document.getElementById('pinInput').value = '';
+    var attempts = getAttempts() + 1;
+    setAttempts(attempts);
+    var remaining = 3 - attempts;
+    if(attempts >= 3){
+      var lockUntil = Date.now() + 15*60*1000;
+      try{ localStorage.setItem(LOCK_KEY, String(lockUntil)); }catch(e){}
+      setAttempts(0);
+      startLockCountdown(lockUntil);
+    } else {
+      document.getElementById('pinError').textContent =
+        'Incorrect PIN — '+remaining+' attempt'+(remaining===1?'':'s')+' remaining before 15-min lock.';
+      document.getElementById('pinInput').focus();
+    }
+  }
+}
+
+// Check lock on page load
+(function(){
+  var until = getLockUntil();
+  if(until && Date.now() < until) startLockCountdown(until);
+})();
+
+document.getElementById('pinSubmit').onclick = tryUnlock;
+document.getElementById('pinInput').addEventListener('keydown', function(e){ if(e.key==='Enter') tryUnlock(); });
+document.getElementById('lockBtn').onclick = function(){
+  document.getElementById('appShell').classList.add('hidden');
+  document.getElementById('lockScreen').classList.remove('hidden');
+  document.getElementById('pinInput').value = '';
+  document.getElementById('pinError').textContent = '';
+};
+
+/* ═══════════════════════════════════════════════════
+   Navigation
+═══════════════════════════════════════════════════ */
+function showPane(name){
+  document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.toggle('active', n.dataset.pane===name); });
+  document.querySelectorAll('.pane').forEach(function(p){ p.classList.toggle('active', p.dataset.pane===name); });
+  document.getElementById('crumbPane').textContent = name;
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+document.querySelectorAll('.nav-item').forEach(function(item){
+  item.addEventListener('click', function(){ showPane(item.dataset.pane); });
+});
+document.querySelectorAll('.quick-card').forEach(function(card){
+  card.addEventListener('click', function(){ showPane(card.dataset.jump); });
+});
+
+/* ═══════════════════════════════════════════════════
+   Boot
+═══════════════════════════════════════════════════ */
+function boot(){
+  config = loadConfig();
+  populateForm(config);
+  refreshOverview();
+}
+
+function populateForm(cfg){
+  // Appearance
+  document.getElementById('accentColorInput').value = cfg.accentColor || '#4C8DFF';
+  document.getElementById('accentColorHex').textContent = cfg.accentColor || '#4C8DFF';
+  document.getElementById('bgColorInput').value = cfg.bgColor || '#0B0E13';
+  document.getElementById('bgColorHex').textContent = cfg.bgColor || '#0B0E13';
+  document.getElementById('avatarUrlInput').value = cfg.avatarUrl || '';
+  // Hero
+  document.getElementById('heroTitleInput').value = cfg.heroTitle || '';
+  document.getElementById('heroTaglineInput').value = cfg.heroTagline || '';
+  renderPills(cfg.impactPills || []);
+  // About
+  var bp = cfg.bioParagraphs || defaultConfig.bioParagraphs;
+  document.getElementById('bio1Input').value = bp[0] || '';
+  document.getElementById('bio2Input').value = bp[1] || '';
+  document.getElementById('bio3Input').value = bp[2] || '';
+  var tr = cfg.traits || defaultConfig.traits;
+  [1,2,3].forEach(function(n){
+    var t = tr[n-1] || { title:'', desc:'' };
+    var ti = document.getElementById('trait'+n+'Title'), td = document.getElementById('trait'+n+'Desc');
+    if(ti) ti.value = t.title;
+    if(td) td.value = t.desc;
+  });
+  // Experience / Skills / Projects / Education / Contact
+  renderExpCards(cfg.experience || []);
+  renderSkillRows(cfg.skills || []);
+  renderArtifacts(cfg.artifacts || []);
+  renderEduCards(cfg.education || []);
+  document.getElementById('contactEmailInput').value = cfg.contactEmail || '';
+  document.getElementById('contactLinkedinInput').value = cfg.contactLinkedin || '';
+  document.getElementById('contactLinkedinLabelInput').value = cfg.contactLinkedinLabel || '';
+  document.getElementById('contactPhoneInput').value = cfg.contactPhone || '';
+}
+
+/* ═══════════════════════════════════════════════════
+   Color hex live labels + file upload
+═══════════════════════════════════════════════════ */
+document.getElementById('accentColorInput').addEventListener('input', function(e){
+  document.getElementById('accentColorHex').textContent = e.target.value;
+});
+document.getElementById('bgColorInput').addEventListener('input', function(e){
+  document.getElementById('bgColorHex').textContent = e.target.value;
+});
+document.getElementById('avatarFileInput').addEventListener('change', function(e){
+  var file = e.target.files[0]; if(!file) return;
+  if(file.size > 1.5*1024*1024){ alert('Keep images under 1.5 MB. Paste a hosted URL instead.'); return; }
+  var r = new FileReader();
+  r.onload = function(){ document.getElementById('avatarUrlInput').value = r.result; };
+  r.readAsDataURL(file);
+});
+
+/* ═══════════════════════════════════════════════════
+   Impact pills
+═══════════════════════════════════════════════════ */
+function renderPills(pills){
+  var list = document.getElementById('pillList'); if(!list) return;
+  list.innerHTML = '';
+  pills.forEach(function(p){
+    var row = makePillRow(p.key, p.value);
+    list.appendChild(row);
+  });
+}
+
+function makePillRow(key, val){
+  var row = document.createElement('div');
+  row.className = 'pill-row';
+  row.innerHTML =
+    '<input type="text" class="text-input pill-key" placeholder="key" value="'+esc(key||'')+'" style="flex:1;">'+
+    '<span style="color:var(--text-faint);font-family:var(--font-mono);padding:0 4px;">=</span>'+
+    '<input type="text" class="text-input pill-val" placeholder="value" value="'+esc(val||'')+'" style="flex:1;">'+
+    '<button class="btn btn-danger btn-sm" style="flex-shrink:0;">×</button>';
+  row.querySelector('.btn-danger').onclick = function(){ row.remove(); };
+  return row;
+}
+
+document.getElementById('addPillBtn').onclick = function(){
+  document.getElementById('pillList').appendChild(makePillRow('',''));
+};
+
+/* ═══════════════════════════════════════════════════
+   Experience cards
+═══════════════════════════════════════════════════ */
+function renderExpCards(exp){
+  var list = document.getElementById('expList'); if(!list) return;
+  list.innerHTML = '';
+  exp.forEach(function(e, i){ list.appendChild(makeExpCard(e, i)); });
+}
+
+function makeExpCard(e, i){
+  var card = document.createElement('div');
+  card.className = 'card'; card.dataset.id = e.id || 'e'+Date.now();
+  card.innerHTML =
+    '<div class="card-head"><span class="lbl">experience · '+String(i+1).padStart(2,'0')+'</span>'+
+    '<button class="btn btn-danger btn-sm rm-exp">Remove</button></div>'+
+    '<div class="field"><label>Role / container name</label><input type="text" class="text-input exp-role" value="'+esc(e.role)+'" placeholder="devops-engineer"></div>'+
+    '<div class="field"><label>Company</label><input type="text" class="text-input exp-company" value="'+esc(e.company)+'" placeholder="Company name"></div>'+
+    '<div class="two-col">'+
+      '<div class="field"><label>Start date</label><input type="text" class="text-input exp-start" value="'+esc(e.startDate)+'" placeholder="YYYY-MM-DD"></div>'+
+      '<div class="field"><label>End date <span style="opacity:.5;font-size:10px;">(blank = Running)</span></label><input type="text" class="text-input exp-end" value="'+esc(e.endDate||'')+'" placeholder="blank = Running"></div>'+
+    '</div>'+
+    '<div class="field"><label>Duration label <span style="opacity:.5;font-size:10px;">(e.g. 3 months)</span></label><input type="text" class="text-input exp-duration" value="'+esc(e.duration||'')+'" placeholder="3 months"></div>'+
+    '<div class="field">'+
+      '<label>Bullets</label>'+
+      '<div class="bullet-list">'+
+        (e.bullets||[]).map(function(b){
+          return '<div class="bullet-wrap">'+
+            '<input type="text" class="text-input bullet-input" value="'+esc(b)+'" placeholder="Bullet point">'+
+            '<button class="btn btn-danger btn-sm rm-bullet" style="flex-shrink:0;">×</button>'+
+            '</div>';
+        }).join('')+
+      '</div>'+
+      '<button class="btn btn-ghost btn-sm add-bullet" style="margin-top:6px;">+ bullet</button>'+
+    '</div>';
+
+  card.querySelector('.rm-exp').onclick = function(){ card.remove(); };
+  card.querySelectorAll('.rm-bullet').forEach(function(btn){
+    btn.onclick = function(){ btn.closest('.bullet-wrap').remove(); };
+  });
+  card.querySelector('.add-bullet').onclick = function(){
+    var bl = card.querySelector('.bullet-list');
+    var wrap = document.createElement('div');
+    wrap.className = 'bullet-wrap';
+    wrap.innerHTML = '<input type="text" class="text-input bullet-input" placeholder="Bullet point"><button class="btn btn-danger btn-sm rm-bullet" style="flex-shrink:0;">×</button>';
+    wrap.querySelector('.rm-bullet').onclick = function(){ wrap.remove(); };
+    bl.appendChild(wrap);
+    wrap.querySelector('input').focus();
+  };
+  return card;
+}
+
+document.getElementById('addExpBtn').onclick = function(){
+  var list = document.getElementById('expList');
+  var count = list.children.length;
+  list.appendChild(makeExpCard({ id:'e'+Date.now(), role:'', company:'', startDate:'', endDate:'', duration:'', bullets:[''] }, count));
+};
+
+/* ═══════════════════════════════════════════════════
+   Skill rows
+═══════════════════════════════════════════════════ */
+function renderSkillRows(skills){
+  var list = document.getElementById('skillList'); if(!list) return;
+  list.innerHTML = '';
+  skills.forEach(function(s){ list.appendChild(makeSkillRow(s)); });
+}
+
+function makeSkillRow(s){
+  var row = document.createElement('div');
+  row.className = 'skill-row';
+  row.innerHTML =
+    '<input type="text" class="text-input skill-label" value="'+esc(s.label||'')+'" placeholder="Skill category" style="flex:1;">'+
+    '<input type="text" class="text-input skill-tools" value="'+esc(s.tools||'')+'" placeholder="Tool · Tool · Tool" style="flex:2;">'+
+    '<button class="btn btn-danger btn-sm rm-skill" style="flex-shrink:0;">×</button>';
+  row.querySelector('.rm-skill').onclick = function(){ row.remove(); };
+  return row;
+}
+
+document.getElementById('addSkillBtn').onclick = function(){
+  var r = makeSkillRow({ label:'', tools:'' });
+  document.getElementById('skillList').appendChild(r);
+  r.querySelector('.skill-label').focus();
+};
+
+/* ═══════════════════════════════════════════════════
+   Projects / Artifacts
+═══════════════════════════════════════════════════ */
+function renderArtifacts(artifacts){
+  var list = document.getElementById('artifactList'); if(!list) return;
+  list.innerHTML = '';
+  artifacts.forEach(function(art, i){ list.appendChild(makeArtCard(art, i)); });
+}
+
+function makeArtCard(art, i){
+  var card = document.createElement('div');
+  card.className = 'card'; card.dataset.id = art.id;
+  card.innerHTML =
+    '<div class="card-head"><span class="lbl">project · '+String(i+1).padStart(2,'0')+'</span>'+
+    '<button class="btn btn-danger btn-sm rm-art">Remove</button></div>'+
+    '<div class="field"><label>Title</label><input type="text" class="text-input art-name" value="'+esc(art.name)+'" placeholder="Project name"></div>'+
+    '<div class="field"><label>Category</label><input type="text" class="text-input art-cat" value="'+esc(art.category||'')+'" placeholder="DevOps Automation"></div>'+
+    '<div class="field"><label>Description</label><textarea class="text-area art-desc">'+esc(art.desc)+'</textarea></div>'+
+    '<div class="field"><label>Stack <span style="opacity:.5;font-size:10px;">(separate with ·)</span></label><input type="text" class="text-input art-stack" value="'+esc(art.stack)+'" placeholder="AWS · Docker · K8s"></div>'+
+    '<div class="field"><label>GitHub URL</label><input type="url" class="text-input art-github" value="'+esc(art.github||'')+'" placeholder="https://github.com/..."></div>'+
+    '<div class="field" style="margin-bottom:0;"><label>Live URL</label><input type="url" class="text-input art-live" value="'+esc(art.live||'')+'" placeholder="https://..."></div>';
+  card.querySelector('.rm-art').onclick = function(){ card.remove(); };
+  return card;
+}
+
+document.getElementById('addArtifactBtn').onclick = function(){
+  var list = document.getElementById('artifactList');
+  var c = makeArtCard({ id:'a'+Date.now(), name:'', category:'', desc:'', stack:'', github:'', live:'' }, list.children.length);
+  list.appendChild(c);
+  c.querySelector('.art-name').focus();
+};
+
+/* ═══════════════════════════════════════════════════
+   Education cards
+═══════════════════════════════════════════════════ */
+function renderEduCards(edu){
+  var list = document.getElementById('eduList'); if(!list) return;
+  list.innerHTML = '';
+  edu.forEach(function(e, i){ list.appendChild(makeEduCard(e, i)); });
+}
+
+function makeEduCard(e, i){
+  var card = document.createElement('div');
+  card.className = 'card'; card.dataset.id = e.id || 'd'+i;
+  card.innerHTML =
+    '<div class="card-head"><span class="lbl">education · '+String(i+1).padStart(2,'0')+'</span>'+
+    '<button class="btn btn-danger btn-sm rm-edu">Remove</button></div>'+
+    '<div class="field"><label>Degree / Program</label><input type="text" class="text-input edu-degree" value="'+esc(e.degree||'')+'" placeholder="B.E. ..."></div>'+
+    '<div class="field"><label>Institution</label><input type="text" class="text-input edu-inst" value="'+esc(e.institution||'')+'" placeholder="College name"></div>'+
+    '<div class="two-col">'+
+      '<div class="field"><label>Duration</label><input type="text" class="text-input edu-dur" value="'+esc(e.duration||'')+'" placeholder="2022 – 2025"></div>'+
+      '<div class="field"><label>Score / Grade</label><input type="text" class="text-input edu-score" value="'+esc(e.score||'')+'" placeholder="CGPA: 7.89"></div>'+
+    '</div>'+
+    '<div class="field" style="margin-bottom:0;"><label>Level</label><input type="text" class="text-input edu-level" value="'+esc(e.level||'')+'" placeholder="Undergraduate / Diploma"></div>';
+  card.querySelector('.rm-edu').onclick = function(){ card.remove(); };
+  return card;
+}
+
+document.getElementById('addEduBtn').onclick = function(){
+  var list = document.getElementById('eduList');
+  var c = makeEduCard({ id:'d'+Date.now(), degree:'', institution:'', duration:'', score:'', level:'' }, list.children.length);
+  list.appendChild(c);
+  c.querySelector('.edu-degree').focus();
+};
+
+/* ═══════════════════════════════════════════════════
+   Collect & Save
+═══════════════════════════════════════════════════ */
+function collectForm(){
+  // Appearance
+  config.accentColor = document.getElementById('accentColorInput').value;
+  config.bgColor     = document.getElementById('bgColorInput').value;
+  config.avatarUrl   = document.getElementById('avatarUrlInput').value.trim();
+
+  // Hero
+  config.heroTitle   = document.getElementById('heroTitleInput').value.trim() || defaultConfig.heroTitle;
+  config.heroTagline = document.getElementById('heroTaglineInput').value.trim();
+  config.impactPills = [];
+  document.querySelectorAll('.pill-row').forEach(function(r){
+    var k = r.querySelector('.pill-key').value.trim();
+    var v = r.querySelector('.pill-val').value.trim();
+    if(k || v) config.impactPills.push({ key:k, value:v });
+  });
+
+  // About
+  config.bioParagraphs = [
+    document.getElementById('bio1Input').value.trim(),
+    document.getElementById('bio2Input').value.trim(),
+    document.getElementById('bio3Input').value.trim()
+  ].filter(Boolean);
+  config.traits = [1,2,3].map(function(n){
+    var ti = document.getElementById('trait'+n+'Title');
+    var td = document.getElementById('trait'+n+'Desc');
+    return { title: ti ? ti.value.trim() : '', desc: td ? td.value.trim() : '' };
+  }).filter(function(t){ return t.title || t.desc; });
+
+  // Experience
+  config.experience = [];
+  document.querySelectorAll('#expList .card').forEach(function(card){
+    var bullets = [];
+    card.querySelectorAll('.bullet-input').forEach(function(inp){
+      var v = inp.value.trim(); if(v) bullets.push(v);
+    });
+    config.experience.push({
+      id:        card.dataset.id,
+      role:      card.querySelector('.exp-role').value.trim(),
+      company:   card.querySelector('.exp-company').value.trim(),
+      startDate: card.querySelector('.exp-start').value.trim(),
+      endDate:   card.querySelector('.exp-end').value.trim(),
+      duration:  card.querySelector('.exp-duration').value.trim(),
+      bullets:   bullets
+    });
+  });
+
+  // Skills
+  config.skills = [];
+  document.querySelectorAll('.skill-row').forEach(function(r){
+    config.skills.push({
+      label: r.querySelector('.skill-label').value.trim(),
+      tools: r.querySelector('.skill-tools').value.trim()
+    });
+  });
+
+  // Projects
+  config.artifacts = [];
+  document.querySelectorAll('#artifactList .card').forEach(function(card){
+    config.artifacts.push({
+      id:       card.dataset.id,
+      name:     card.querySelector('.art-name').value.trim(),
+      category: card.querySelector('.art-cat').value.trim(),
+      desc:     card.querySelector('.art-desc').value.trim(),
+      stack:    card.querySelector('.art-stack').value.trim(),
+      github:   card.querySelector('.art-github').value.trim(),
+      live:     card.querySelector('.art-live').value.trim()
+    });
+  });
+
+  // Education
+  config.education = [];
+  document.querySelectorAll('#eduList .card').forEach(function(card){
+    config.education.push({
+      id:          card.dataset.id,
+      degree:      card.querySelector('.edu-degree').value.trim(),
+      institution: card.querySelector('.edu-inst').value.trim(),
+      duration:    card.querySelector('.edu-dur').value.trim(),
+      score:       card.querySelector('.edu-score').value.trim(),
+      level:       card.querySelector('.edu-level').value.trim()
+    });
+  });
+
+  // Contact
+  config.contactEmail         = document.getElementById('contactEmailInput').value.trim();
+  config.contactLinkedin      = document.getElementById('contactLinkedinInput').value.trim();
+  config.contactLinkedinLabel = document.getElementById('contactLinkedinLabelInput').value.trim();
+  config.contactPhone         = document.getElementById('contactPhoneInput').value.trim();
+
+  config.updatedAt = new Date().toISOString();
+}
+
+/* ═══════════════════════════════════════════════════
+   Undo / Redo
+═══════════════════════════════════════════════════ */
+var undoStack = [];
+var redoStack = [];
+
+function updateUndoRedoBtns(){
+  var u = document.getElementById('undoBtn');
+  var r = document.getElementById('redoBtn');
+  if(u){ u.disabled = !undoStack.length; u.style.opacity = undoStack.length ? '1' : '.4'; }
+  if(r){ r.disabled = !redoStack.length; r.style.opacity = redoStack.length ? '1' : '.4'; }
+}
+
+function doUndo(){
+  if(!undoStack.length) return;
+  redoStack.push(JSON.stringify(config));
+  config = JSON.parse(undoStack.pop());
+  saveConfig(config);
+  populateForm(config);
+  refreshOverview();
+  updateUndoRedoBtns();
+  flashSave(['saveStatus'], true);
+}
+
+function doRedo(){
+  if(!redoStack.length) return;
+  undoStack.push(JSON.stringify(config));
+  config = JSON.parse(redoStack.pop());
+  saveConfig(config);
+  populateForm(config);
+  refreshOverview();
+  updateUndoRedoBtns();
+  flashSave(['saveStatus'], true);
+}
+
+document.getElementById('undoBtn').onclick = doUndo;
+document.getElementById('redoBtn').onclick = doRedo;
+
+function doSave(extraIds){
+  undoStack.push(JSON.stringify(config));
+  redoStack = [];
+  collectForm();
+  var ok = saveConfig(config);
+  var ids = ['saveStatus'].concat(extraIds||[]);
+  flashSave(ids, ok);
+  if(ok) refreshOverview();
+  updateUndoRedoBtns();
+}
+
+document.getElementById('saveBtn').onclick = function(){ doSave([]); };
+
+document.querySelectorAll('[data-save]').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var pane = btn.closest('.pane');
+    var ss = pane ? pane.querySelector('.save-status') : null;
+    doSave(ss && ss.id ? [ss.id] : []);
+  });
+});
+
+/* ═══════════════════════════════════════════════════
+   Overview
+═══════════════════════════════════════════════════ */
+function refreshOverview(){
+  document.getElementById('ovViews').textContent    = getViews();
+  document.getElementById('ovProjects').textContent = (config.artifacts||[]).length;
+  document.getElementById('ovExp').textContent      = (config.experience||[]).length;
+  document.getElementById('analyticsViews').textContent = getViews();
+  document.getElementById('ovSaved').textContent    = config.updatedAt
+    ? new Date(config.updatedAt).toLocaleString(undefined, { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' })
+    : 'never';
+}
+
+document.getElementById('resetViewsBtn').onclick = function(){
+  if(!confirm('Reset view counter to 0?')) return;
+  try{ localStorage.setItem(VIEWS_KEY,'0'); refreshOverview(); }catch(e){}
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en" class="pre-reveal">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vigneshprabhu - Portfolio</title>
+<meta name="description" content="DevOps Engineer · AWS · GCP · Kubernetes · Cyces Innovation Labs">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+  // Apply accent & bg from admin config before first paint — no flash
+  (function(){
+    try{
+      var cfg = JSON.parse(localStorage.getItem('vp-config') || 'null');
+      if(!cfg) return;
+      var s = document.documentElement.style;
+      if(cfg.accentColor) s.setProperty('--accent', cfg.accentColor);
+      if(cfg.bgColor)     s.setProperty('--bg',     cfg.bgColor);
+      if(cfg.accentColor){
+        // derive soft variant
+        var h = cfg.accentColor.replace('#','');
+        var r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+        s.setProperty('--accent-soft', 'rgba('+r+','+g+','+b+',0.13)');
+      }
+    }catch(e){}
+  })();
+</script>
+<style>
+  :root{
+    --bg:          #0B0E13;
+    --surface:     #11161D;
+    --surface-2:   #161C25;
+    --border:      #232B36;
+    --text:        #E7ECF3;
+    --text-dim:    #8B95A5;
+    --text-faint:  #545E6E;
+    --accent:      #4C8DFF;
+    --accent-soft: rgba(76,141,255,0.13);
+    --running:     #3DD68C;
+    --running-soft:rgba(61,214,140,0.12);
+    --warn:        #E3B341;
+    --font-display:'Manrope',    sans-serif;
+    --font-body:   'Manrope',    sans-serif;
+    --font-mono:   'Fira Code',  monospace;
+    --maxw:        min(1320px, 92vw);
+  }
+  *{ box-sizing: border-box; margin:0; padding:0; }
+  html{ scroll-behavior: smooth; }
+  body{
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  a{ color: var(--accent); text-decoration: none; }
+  ::selection{ background: var(--accent-soft); color: var(--accent); }
+  :focus-visible{ outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar{ width: 4px; }
+  ::-webkit-scrollbar-track{ background: var(--bg); }
+  ::-webkit-scrollbar-thumb{ background: var(--border); border-radius: 2px; }
+
+  /* ── Keyframes ── */
+  @keyframes pulse       { 0%,100%{ opacity:1; } 50%{ opacity:0.3; } }
+  @keyframes blink-cur   { 0%,100%{ opacity:1; } 50%{ opacity:0; } }
+  @keyframes fade-up     { from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); } }
+  @keyframes check-pop   { 0%{ transform:scale(0.5); opacity:0; } 60%{ transform:scale(1.2); opacity:1; } 100%{ transform:scale(1); } }
+  @keyframes particle-rise{ 0%{ transform:translateY(0); opacity:0; } 12%{ opacity:0.55; } 88%{ opacity:0.4; } 100%{ transform:translateY(-360px); opacity:0; } }
+
+  /* ── Pre-reveal state ── */
+  .pre-reveal .hero-name,
+  .pre-reveal .role-line,
+  .pre-reveal .hero-tagline,
+  .pre-reveal .hero-cta,
+  .pre-reveal .hero-impact{ animation-play-state:paused; }
+  html.boot-lock, html.boot-lock body{ overflow:hidden; height:100%; }
+
+  /* ── BG canvas layer ── */
+  .bg-layer{ position:fixed; inset:0; z-index:-1; background:var(--bg); pointer-events:none; }
+  #matrixCanvas{ position:absolute; inset:0; width:100%; height:100%; opacity:0.45; }
+
+  /* ── Particles ── */
+  .particle-field{ position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:0; }
+  .particle{
+    position:absolute; bottom:-10px; width:3px; height:3px; border-radius:50%;
+    background:var(--accent); opacity:0;
+    animation:particle-rise linear infinite;
+  }
+
+  /* ── Console header ── */
+  .console-header{ border-bottom:1px solid var(--border); position:relative; z-index:1; }
+  .cmdline-area{ padding:16px 24px 14px; font-family:var(--font-mono); font-size:13.5px; }
+  .cmd-line{ display:flex; align-items:baseline; min-height:1.6em; }
+  .cmd-prompt{ color:var(--accent); margin-right:8px; flex-shrink:0; }
+  .cmd-text{ color:var(--text-dim); }
+  .cmd-file{ color:var(--accent); font-weight:600; }
+  .cmd-ok-text{ color:var(--running); }
+  .cmd-info-text{ color:var(--text-faint); }
+  .cmd-cursor{ display:inline-block; width:7px; height:13px; background:var(--accent); vertical-align:middle; margin-left:2px; animation:blink-cur 1s step-end infinite; }
+
+  /* ── Boot overlay ── */
+  #bootOverlay{
+    position:fixed; inset:0; z-index:9999; background:var(--bg);
+    display:flex; align-items:center; justify-content:center;
+  }
+  #bootOverlay .cmdline-area{ padding:0; min-width:280px; }
+  @keyframes overlay-out{ from{opacity:1;} to{opacity:0;} }
+  #bootOverlay.exiting{ animation:overlay-out .55s ease forwards; pointer-events:none; }
+
+  /* ── Hero ── */
+  .slide-intro{
+    position:relative; min-height:100svh; display:flex; flex-direction:column;
+    overflow:hidden; background:var(--bg);
+  }
+  .hero{ flex:1; display:flex; align-items:center; width:100%; position:relative; z-index:1; padding:32px 24px; }
+  .hero-inner{ max-width:var(--maxw); margin:0 auto; width:100%; text-align:center; }
+
+  .hero-name{
+    font-family:var(--font-display); font-weight:800;
+    font-size:clamp(46px, 8.5vw, 96px); line-height:1.02; letter-spacing:-0.025em;
+    margin-bottom:18px; opacity:0; animation:fade-up .6s ease .05s both;
+  }
+  .role-line{
+    display:inline-flex; align-items:center; gap:10px;
+    font-family:var(--font-mono); font-size:clamp(14px,2.2vw,19px); font-weight:600;
+    letter-spacing:.13em; text-transform:uppercase; color:var(--running);
+    margin-bottom:22px; opacity:0; animation:fade-up .5s ease .22s both;
+  }
+  .role-line .dot{
+    width:7px; height:7px; border-radius:50%; background:var(--running);
+    box-shadow:0 0 10px rgba(61,214,140,.65); animation:pulse 1.4s ease-in-out infinite;
+  }
+  .hero-tagline{
+    font-size:clamp(15px,2vw,18px); color:var(--text-dim); margin:0 auto 30px;
+    max-width:560px; opacity:0; animation:fade-up .55s ease .4s both;
+  }
+  .hero-cta{
+    display:flex; gap:12px; flex-wrap:wrap; justify-content:center;
+    margin-bottom:36px; opacity:0; animation:fade-up .55s ease .55s both;
+  }
+  .btn{
+    font-family:var(--font-mono); font-size:14px; padding:12px 22px; border-radius:7px;
+    border:1px solid var(--border); display:inline-flex; align-items:center; gap:7px;
+    transition:all .2s ease; cursor:pointer;
+  }
+  .btn-primary{ background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600; }
+  .btn-primary:hover{ filter:brightness(1.15); }
+  .btn-ghost{ color:var(--text-dim); background:transparent; }
+  .btn-ghost:hover{ border-color:var(--accent); color:var(--accent); }
+
+  .hero-impact{
+    padding-top:22px; border-top:1px solid var(--border); max-width:fit-content; margin:0 auto;
+    opacity:0; animation:fade-up .55s ease .7s both;
+  }
+  .impact-label{ font-family:var(--font-mono); font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.07em; margin-bottom:10px; text-align:center; }
+  .impact-pills{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+  .k8s-label{
+    font-family:var(--font-mono); font-size:12.5px; padding:5px 11px; border-radius:5px;
+    background:var(--surface-2); border:1px solid var(--border); color:var(--text-dim);
+  }
+  .k8s-label b{ color:var(--accent); font-weight:500; }
+
+  /* ── Sticky nav ── */
+  .cmdnav{
+    position:sticky; top:0; z-index:50;
+    background:rgba(11,14,19,.92); backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--border);
+  }
+  .cmdnav-inner{
+    max-width:var(--maxw); margin:0 auto; padding:13px 24px;
+    display:flex; gap:24px; overflow-x:auto; font-family:var(--font-mono); font-size:15px;
+    scrollbar-width:none;
+  }
+  .cmdnav-inner::-webkit-scrollbar{ display:none; }
+  .cmdnav a{ color:var(--text-faint); white-space:nowrap; transition:color .2s; }
+  .cmdnav a .ni{ color:var(--accent); font-weight:700; margin-right:5px; }
+  .cmdnav a:hover{ color:var(--text); }
+  .cmdnav a.active{ color:var(--accent); }
+
+  /* ── Sections ── */
+  .section{
+    max-width:var(--maxw); margin:0 auto; padding:56px 24px;
+    border-bottom:1px solid var(--border);
+    opacity:0; transform:translateY(14px);
+    transition:opacity .55s ease, transform .55s ease;
+  }
+  .section.in{ opacity:1; transform:translateY(0); }
+  .section-label{
+    font-family:var(--font-mono); font-size:11.5px; color:var(--accent);
+    text-transform:uppercase; letter-spacing:.1em; margin-bottom:8px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .section-label::before{ content:""; width:14px; height:1px; background:var(--accent); display:inline-block; }
+  .section h2{ font-family:var(--font-display); font-size:22px; font-weight:700; margin-bottom:24px; }
+
+  /* ── Annotation box (about) ── */
+  .annotation-box{
+    background:var(--surface); border:1px solid var(--border);
+    border-left:3px solid var(--accent); border-radius:7px;
+    padding:18px 20px; font-size:16px; color:var(--text-dim); line-height:1.72;
+    margin-bottom:20px;
+  }
+  .annotation-box p+p{ margin-top:12px; }
+  .bio-key{ color:var(--text); font-weight:700; }
+
+  /* Trait cards */
+  .trait-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  .trait-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    padding:20px 18px; transition:border-color .2s ease, transform .2s ease;
+  }
+  .trait-card:hover{ border-color:var(--accent); transform:translateY(-2px); }
+  .trait-icon{ width:28px; height:20px; color:var(--accent); margin-bottom:14px; }
+  .trait-card h3{ font-family:var(--font-display); font-size:16px; font-weight:700; margin-bottom:8px; }
+  .trait-card p{ font-size:14px; color:var(--text-dim); line-height:1.6; }
+  @media(max-width:700px){ .trait-grid{ grid-template-columns:1fr; } }
+
+  /* ── Container cards (experience) ── */
+  .container-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    margin-bottom:14px; overflow:hidden;
+  }
+  .container-card:last-child{ margin-bottom:0; }
+  .container-head{
+    display:flex; align-items:center; gap:10px; padding:14px 18px;
+    border-bottom:1px solid var(--border); flex-wrap:wrap;
+  }
+  .container-name{ font-family:var(--font-mono); font-weight:600; font-size:15px; flex-grow:1; }
+  .container-state{
+    font-family:var(--font-mono); font-size:11.5px; padding:3px 10px; border-radius:5px;
+  }
+  .container-state.running{ color:var(--running); background:var(--running-soft); }
+  .container-state.terminated{ color:var(--text-faint); background:var(--surface-2); }
+  .container-meta{
+    padding:11px 18px; font-family:var(--font-mono); font-size:12px;
+    color:var(--text-faint); border-bottom:1px solid var(--border);
+    display:flex; flex-wrap:wrap; gap:14px;
+  }
+  .container-meta b{ color:var(--text-dim); font-weight:500; }
+  .container-cmd{ padding:14px 18px; list-style:none; }
+  .container-cmd li{
+    font-size:15px; color:var(--text-dim); margin-bottom:8px;
+    padding-left:18px; position:relative;
+  }
+  .container-cmd li:last-child{ margin-bottom:0; }
+  .container-cmd li::before{ content:"›"; position:absolute; left:0; color:var(--accent); font-family:var(--font-mono); }
+
+  /* ── Conditions table (skills) ── */
+  .cond-table{ width:100%; border-collapse:collapse; }
+  .cond-row{ border-top:1px solid var(--border); }
+  .cond-row:first-child{ border-top:none; }
+  .cond-row td{ padding:14px 6px 14px 0; vertical-align:middle; }
+  .cond-type{ font-family:var(--font-mono); font-size:14px; color:var(--text); width:230px; }
+  .cond-status{ width:90px; }
+  .cond-status .pill{
+    font-family:var(--font-mono); font-size:11.5px; padding:3px 9px; border-radius:5px;
+    display:inline-flex; align-items:center; gap:6px;
+    color:var(--text-faint); background:var(--surface-2);
+    transition:color .3s ease, background .3s ease, border-color .3s ease;
+    border:1px solid transparent;
+  }
+  .cond-status .pill svg{ width:9px; height:9px; opacity:0; transition:opacity .2s ease; }
+  .cond-row.ready .pill{ color:var(--running); border-color:var(--running); }
+  .cond-row.ready .pill svg{ opacity:1; animation:check-pop .3s ease; }
+  .cond-msg{ font-size:14px; color:var(--running); font-weight:500; }
+  @media(max-width:640px){
+    .cond-type{ width:auto; font-size:13px; display:block; }
+    .cond-row{ display:flex; flex-direction:column; gap:4px; padding:12px 0; }
+    .cond-row td{ padding:2px 0; }
+    .cond-msg{ font-size:12.5px; }
+  }
+
+  /* ── Project cards ── */
+  .project-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    padding:26px 28px; margin-bottom:14px;
+    opacity:0; transform:translateY(14px);
+    transition:opacity .5s ease, transform .5s ease, border-color .2s ease;
+  }
+  .project-card:last-child{ margin-bottom:0; }
+  .project-card:hover{ border-color:var(--accent); }
+  .section.in .project-card{ opacity:1; transform:translateY(0); }
+  .proj-cat{
+    font-family:var(--font-mono); font-size:11px; color:var(--accent);
+    text-transform:uppercase; letter-spacing:.1em; margin-bottom:9px;
+  }
+  .proj-title{ font-family:var(--font-display); font-size:19px; font-weight:700; margin-bottom:10px; }
+  .proj-desc{ font-size:14.5px; color:var(--text-dim); line-height:1.7; margin-bottom:16px; }
+  .proj-tags{ display:flex; flex-wrap:wrap; gap:7px; margin-bottom:16px; }
+  .proj-links{ display:flex; gap:16px; flex-wrap:wrap; }
+  .proj-link{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:var(--font-mono); font-size:13px; color:var(--text-dim);
+    transition:color .2s ease;
+  }
+  .proj-link:hover{ color:var(--accent); }
+  @media(max-width:600px){ .project-card{ padding:20px; } }
+
+  /* ── Volume box (education) ── */
+  .volume-box{
+    background:var(--surface); border:1px solid var(--border); border-radius:8px;
+    padding:18px 20px; font-family:var(--font-mono); font-size:14px;
+    color:var(--text-dim); line-height:2.1; margin-bottom:12px;
+  }
+  .volume-box:last-child{ margin-bottom:0; }
+  .volume-box .k{ color:var(--text-faint); }
+  .volume-box .v{ color:var(--text); }
+
+  /* ── YAML block (contact) ── */
+  .yaml-block{
+    background:var(--surface); border:1px solid var(--border); border-radius:8px;
+    padding:18px 20px; font-family:var(--font-mono); font-size:14.5px;
+    color:var(--text-dim); line-height:2.1;
+  }
+  .yaml-block .key{ color:var(--accent); }
+  .copy-btn{
+    font-family:var(--font-mono); font-size:11px; color:var(--text-dim);
+    border:1px solid var(--border); background:var(--surface-2); padding:4px 10px;
+    border-radius:5px; cursor:pointer; margin-left:10px;
+    transition:color .2s, border-color .2s, background .2s;
+  }
+  .copy-btn:hover{ color:var(--accent); border-color:var(--accent); }
+  .copy-btn.copied{ color:var(--running); border-color:var(--running); background:var(--running-soft); }
+
+  /* ── Footer ── */
+  footer{
+    max-width:var(--maxw); margin:0 auto;
+    padding:26px 24px 56px;
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;
+    font-family:var(--font-mono); font-size:12px; color:var(--text-faint);
+  }
+  footer a{ color:var(--text-faint); transition:color .2s; }
+  footer a:hover{ color:var(--accent); }
+
+  /* ── Reduced motion & mobile ── */
+  @media(prefers-reduced-motion:reduce){
+    *{ animation:none !important; transition:none !important; }
+    html{ scroll-behavior:auto; }
+    .hero-name,.role-line,.hero-tagline,.hero-cta,.hero-impact,.section,.project-card{
+      opacity:1 !important; transform:none !important;
+    }
+    .bg-layer{ display:none !important; }
+    .particle-field{ display:none !important; }
+  }
+  @media(max-width:480px){
+    .hero-cta{ flex-direction:column; align-items:center; }
+    .cmdnav-inner{ gap:16px; font-size:13.5px; }
+    .cond-msg{ display:none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Boot overlay (full-screen, centered, fades away after sequence) ── -->
+<div id="bootOverlay">
+  <div id="bootCmdArea" class="cmdline-area"></div>
+</div>
+
+<!-- ── Matrix rain background ── -->
+<div class="bg-layer"><canvas id="matrixCanvas"></canvas></div>
+
+<!-- ── Hero slide ── -->
+<div class="slide-intro">
+  <div class="particle-field" id="particleField"></div>
+
+  <div class="console-header">
+    <div class="cmdline-area">
+      <div class="cmd-line"><span class="cmd-prompt">$</span><span class="cmd-text">careerctl start vigneshprabhu</span></div>
+    </div>
+  </div>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <h1 class="hero-name" id="heroName">Vigneshprabhu M.</h1>
+      <div class="role-line"><span class="dot"></span>DevOps Engineer</div>
+      <p class="hero-tagline" id="heroTagline">Keeping cloud infrastructure <b style="color:var(--text)">Running</b>, not just deployed.</p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="#metadata">Describe projects ↓</a>
+        <a class="btn btn-ghost"   href="#contact">Contact →</a>
+      </div>
+      <div class="hero-impact">
+        <div class="impact-label">impact</div>
+        <div class="impact-pills" id="impactPills"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ── Sticky command nav ── -->
+<nav class="cmdnav">
+  <div class="cmdnav-inner">
+    <a href="#metadata"   data-target="metadata"><span class="ni">▸</span>metadata</a>
+    <a href="#experience" data-target="experience"><span class="ni">▸</span>experience</a>
+    <a href="#skills"     data-target="skills"><span class="ni">▸</span>skills</a>
+    <a href="#projects"   data-target="projects"><span class="ni">▸</span>projects</a>
+    <a href="#education"  data-target="education"><span class="ni">▸</span>education</a>
+    <a href="#contact"    data-target="contact"><span class="ni">▸</span>contact</a>
+  </div>
+</nav>
+
+<!-- ── metadata ── -->
+<section class="section" id="metadata">
+  <div class="section-label">Metadata</div>
+  <h2>Labels &amp; Annotations</h2>
+  <div class="annotation-box" id="annotationBox"></div>
+  <div class="trait-grid" id="traitGrid"></div>
+</section>
+
+<!-- ── experience ── -->
+<section class="section" id="experience">
+  <div class="section-label">History</div>
+  <h2>Experience</h2>
+
+  <div id="experienceList"></div>
+</section>
+
+<!-- ── skills ── -->
+<section class="section" id="skills">
+  <div class="section-label">Capabilities</div>
+  <h2>Skill Stack</h2>
+  <table class="cond-table">
+    <tbody id="condBody"></tbody>
+  </table>
+</section>
+
+<!-- ── projects ── -->
+<section class="section" id="projects">
+  <div class="section-label">Projects</div>
+  <h2>Project Portfolio</h2>
+  <div id="projectsList"></div>
+</section>
+
+<!-- ── education ── -->
+<section class="section" id="education">
+  <div class="section-label">Spec</div>
+  <h2>Education</h2>
+  <div id="educationList"></div>
+</section>
+
+<!-- ── contact ── -->
+<section class="section" id="contact" style="border-bottom:none;">
+  <div class="section-label">Networking</div>
+  <h2>Get in Touch</h2>
+  <div class="yaml-block" id="yamlBlock">
+    <div><span class="key">contact.email:&nbsp;&nbsp;&nbsp;</span><span id="contactEmail">vigneshprabhuvp44@gmail.com</span><button class="copy-btn" onclick="copyEmail(this)">copy</button></div>
+    <div><span class="key">contact.linkedin:</span> <a id="contactLinkedin" href="https://linkedin.com/in/vigneshprabhum" target="_blank" rel="noopener">linkedin.com/in/vigneshprabhum</a></div>
+    <div id="phoneRow" style="display:none"><span class="key">contact.phone:&nbsp;&nbsp;&nbsp;</span><span id="contactPhone"></span></div>
+  </div>
+</section>
+
+<footer>
+  <span>vigneshprabhu / career</span>
+  <span><a href="admin.html">admin ↗</a>&nbsp;·&nbsp;Chennai, India</span>
+</footer>
+
+<script>
+/* ════════════════════════════════════════════════════
+   Config / defaults
+════════════════════════════════════════════════════ */
+var STORAGE_KEY = 'vp-config';
+
+var defaultConfig = {
+  heroTitle:   'Vigneshprabhu M.',
+  heroTagline: 'Keeping cloud infrastructure Running, not just deployed.',
+  accentColor: '#4C8DFF', bgColor: '#0B0E13', avatarUrl: '',
+  impactPills: [
+    { key:'prod-deployed', value:'7' },
+    { key:'cost-saved',    value:'$1500 USD' },
+    { key:'stack',         value:'AWS|Docker|K8s' },
+    { key:'incidents-resolved', value:'10+' }
+  ],
+  bioParagraphs: [
+    '"I\'m a DevOps Engineer from Coimbatore, Tamil Nadu, currently working at Cyces Innovation Labs LLP in Chennai since June 2025. I enjoy understanding how systems work behind the scenes and solving practical infrastructure and operational challenges."',
+    '"What interests me most about DevOps is the balance between development, infrastructure, automation, and reliability. I like exploring how small improvements in workflows, deployment processes, and system design can make systems easier to manage and more dependable over time."',
+    '"I\'m someone who enjoys learning deeply, building thoughtfully and improving step by step. And I believe good infrastructure should be simple to manage, reliable under pressure, and designed with long-term maintainability in mind."'
+  ],
+  traits: [
+    { title:'Deeply Curious',    desc:'Always eager to understand how systems work internally rather than just using them at the surface level.' },
+    { title:'Purpose-Driven',    desc:'Believes technology should solve real problems, create meaningful impact, and continuously improve people and systems.' },
+    { title:'Strong Work Ethic', desc:'Values integrity, accountability, and consistency while building reliable systems and meaningful relationships.' }
+  ],
+  experience: [
+    { id:'e1', role:'devops-engineer', company:'Cyces Innovation Labs', startDate:'2025-10-01', endDate:'', duration:'',
+      bullets:['Operates AWS, GCP, and Kubernetes environments — deployments, infra ops, reliability.','Owns monitoring and incident investigation, cutting downtime through observability.','Builds toward secure, repeatable engineering workflows across client environments.','Extends infrastructure automation using Terraform and IaC practices.'] },
+    { id:'e2', role:'devops-engineer-intern', company:'Cyces Innovation Labs', startDate:'2025-06-23', endDate:'2025-09-30', duration:'3 months',
+      bullets:['First hands-on exposure to cloud infrastructure and AWS-based DevOps workflows.','Cut costs across multiple client environments via right-sizing — no performance trade-off.'] }
+  ],
+  skills: [
+    { label:'Containers & Orchestration', tools:'Docker · Docker Compose · Kubernetes · EKS' },
+    { label:'Cloud & Infrastructure',     tools:'AWS · GCP · Terraform · Lambda · IAM' },
+    { label:'Automation & CI/CD',         tools:'GitHub Actions · Jenkins · CI/CD Pipelines' },
+    { label:'Monitoring & Observability', tools:'Grafana · Prometheus · New Relic · CloudWatch' },
+    { label:'OS & Tools',                 tools:'Linux · Git · Helm · kubectl' },
+    { label:'Scripting',                  tools:'Python · Bash' }
+  ],
+  education: [
+    { degree:'B.E. Electronics and Communication Engineering', institution:'Madras Institute of Technology', duration:'2022 – 2025', score:'CGPA: 7.89', level:'Undergraduate' },
+    { degree:'Diploma in Electrical and Electronics Engineering', institution:'Nachimuthu Polytechnic College', duration:'2019 – 2022', score:'93.14%', level:'Diploma' }
+  ],
+  artifacts: [
+    { id:'a1', name:'Divi — Cloud Operations Assistant', category:'DevOps Automation',
+      desc:'Built a Slack-integrated cloud operations assistant to manage EC2 infrastructure workflows, including instance control, status monitoring, and AI-assisted downtime log analysis using AWS Lambda, CloudWatch logs, and OpenAI API integrations.',
+      stack:'AWS Lambda · CloudWatch · OpenAI API · Slack Commands · Serverless', github:'https://github.com/vignesh-in04', live:'' },
+    { id:'a2', name:'Multi-Client AWS Billing Dashboard', category:'AWS Automation',
+      desc:'Built a centralized AWS billing dashboard to monitor cloud expenditure trends across multiple environments using cross-account IAM roles and automated cost collection workflows.',
+      stack:'AWS Lambda · Cross-Account IAM · Billing Analytics · VPC Peering · OpenVPN', github:'https://github.com/vignesh-in04', live:'' },
+    { id:'a3', name:'Infrastructure Cost Optimization Analyzer', category:'DevOps Automation',
+      desc:'Developed an AI-assisted infrastructure cost optimization analyzer that used historical host metrics from the New Relic API and rule-based decision workflows to recommend cost-optimized infrastructure sizing strategies.',
+      stack:'AI Workflows · Infrastructure Analytics · New Relic API · Cost Optimization', github:'https://github.com/vignesh-in04', live:'' }
+  ],
+  contactEmail:'vigneshprabhuvp44@gmail.com',
+  contactLinkedin:'https://linkedin.com/in/vigneshprabhum',
+  contactLinkedinLabel:'linkedin.com/in/vigneshprabhum',
+  contactPhone:''
+};
+
+var defaultArtifacts = defaultConfig.artifacts;
+
+function loadConfig(){
+  try{
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      var c = JSON.parse(raw);
+      if(!c.artifacts)     c.artifacts     = defaultConfig.artifacts;
+      if(!c.experience)    c.experience    = defaultConfig.experience;
+      if(!c.skills)        c.skills        = defaultConfig.skills;
+      if(!c.education)     c.education     = defaultConfig.education;
+      if(!c.bioParagraphs) c.bioParagraphs = defaultConfig.bioParagraphs;
+      if(!c.traits)        c.traits        = defaultConfig.traits;
+      if(!c.impactPills)   c.impactPills   = defaultConfig.impactPills;
+      return c;
+    }
+    // try old key
+    var oldRaw = localStorage.getItem('portfolio-config');
+    if(oldRaw){
+      var old = JSON.parse(oldRaw);
+      return Object.assign({}, defaultConfig, {
+        heroTitle:   old.heroTitle  || defaultConfig.heroTitle,
+        heroTagline: old.heroSubtitle || old.heroTagline || defaultConfig.heroTagline,
+        accentColor: old.accentColor || defaultConfig.accentColor,
+        bgColor:     old.bgColor    || defaultConfig.bgColor,
+        avatarUrl:   old.avatarUrl  || '',
+        artifacts:   old.artifacts  || defaultConfig.artifacts
+      });
+    }
+  }catch(e){}
+  return null;
+}
+
+var cfg = loadConfig();
+
+/* ════════════════════════════════════════════════════
+   Apply config to DOM
+════════════════════════════════════════════════════ */
+var TRAIT_ICONS = [
+  '<circle cx="10" cy="10" r="6.5" stroke="currentColor" stroke-width="2"/><line x1="14.8" y1="14.8" x2="20.5" y2="20.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  '<circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/>',
+  '<path d="M12 3L19 6.2V11C19 15.4 16.1 19 12 20.6C7.9 19 5 15.4 5 11V6.2L12 3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>'
+];
+
+function applyConfig(c){
+  var d = defaultConfig;
+  if(!c){
+    renderMeta(d); renderExperience(d); renderSkillRows(d);
+    renderEducation(d); renderProjects(d.artifacts);
+    return;
+  }
+
+  // Hero text
+  var heroNameEl = document.getElementById('heroName');
+  if(heroNameEl) heroNameEl.textContent = c.heroTitle || d.heroTitle;
+  var heroTagEl = document.getElementById('heroTagline');
+  if(heroTagEl){ heroTagEl.innerHTML = ''; heroTagEl.textContent = c.heroTagline || d.heroTagline; }
+
+  // Avatar
+  if(c.avatarUrl){
+    var hero = document.querySelector('.hero-inner');
+    if(hero && !document.getElementById('heroAvatar')){
+      var img = document.createElement('img');
+      img.id = 'heroAvatar'; img.src = c.avatarUrl; img.alt = '';
+      img.style.cssText = 'width:72px;height:72px;border-radius:50%;object-fit:cover;margin:0 auto 20px;display:block;border:2px solid var(--border);';
+      hero.insertBefore(img, hero.firstChild);
+    }
+  }
+
+  // Contact
+  var emailEl = document.getElementById('contactEmail');
+  if(emailEl){ emailEl.textContent = c.contactEmail || d.contactEmail; }
+  var linkedinEl = document.getElementById('contactLinkedin');
+  if(linkedinEl){
+    linkedinEl.href = c.contactLinkedin || d.contactLinkedin;
+    linkedinEl.textContent = c.contactLinkedinLabel || (c.contactLinkedin||d.contactLinkedin).replace('https://','');
+  }
+  var phoneRow = document.getElementById('phoneRow');
+  var phoneEl  = document.getElementById('contactPhone');
+  if(phoneRow && phoneEl && c.contactPhone){
+    phoneEl.textContent = c.contactPhone; phoneRow.style.display = '';
+  }
+
+  renderMeta(c);
+  renderExperience(c);
+  renderSkillRows(c);
+  renderEducation(c);
+  renderProjects(c.artifacts || d.artifacts);
+}
+
+function renderMeta(c){
+  var d = defaultConfig;
+  // Impact pills
+  var ip = document.getElementById('impactPills');
+  if(ip){
+    var pills = c.impactPills || d.impactPills;
+    ip.innerHTML = pills.map(function(p){
+      return '<span class="k8s-label"><b>'+escHtml(p.key)+'=</b>'+escHtml(p.value)+'</span>';
+    }).join('');
+  }
+  // Bio
+  var ab = document.getElementById('annotationBox');
+  if(ab){
+    var paras = c.bioParagraphs || d.bioParagraphs;
+    ab.innerHTML = paras.map(function(p){ return '<p>'+escHtml(p)+'</p>'; }).join('');
+  }
+  // Traits
+  var tg = document.getElementById('traitGrid');
+  if(tg){
+    var traits = c.traits || d.traits;
+    tg.innerHTML = traits.map(function(t, i){
+      return '<div class="trait-card"><svg class="trait-icon" viewBox="0 0 24 24" fill="none">'+
+        (TRAIT_ICONS[i % TRAIT_ICONS.length])+'</svg><h3>'+escHtml(t.title)+'</h3><p>'+escHtml(t.desc)+'</p></div>';
+    }).join('');
+  }
+}
+
+function renderExperience(c){
+  var el = document.getElementById('experienceList'); if(!el) return;
+  var exp = c.experience || defaultConfig.experience;
+  el.innerHTML = exp.map(function(e){
+    var running = !e.endDate;
+    var meta = '<span><b>Company:</b> '+escHtml(e.company)+'</span><span><b>Started:</b> '+escHtml(e.startDate)+'</span>';
+    if(running){
+      meta += '<span><b>Age:</b> <span class="age-cell">—</span></span>';
+    } else {
+      meta += '<span><b>Finished:</b> '+escHtml(e.endDate)+'</span>';
+      if(e.duration) meta += '<span><b>Duration:</b> '+escHtml(e.duration)+'</span>';
+    }
+    var bullets = (e.bullets||[]).map(function(b){ return '<li>'+escHtml(b)+'</li>'; }).join('');
+    return '<div class="container-card">'+
+      '<div class="container-head"><span class="container-name">'+escHtml(e.role)+'</span>'+
+      '<span class="container-state '+(running?'running':'terminated')+'">'+(running?'Running':'Completed')+'</span></div>'+
+      '<div class="container-meta">'+meta+'</div>'+
+      '<ul class="container-cmd">'+bullets+'</ul></div>';
+  }).join('');
+  // Update age counter start from first running entry
+  var running = exp.find(function(e){ return !e.endDate; });
+  if(running && running.startDate) engStart = new Date(running.startDate+'T09:00:00+05:30');
+  renderAge();
+}
+
+function renderSkillRows(c){
+  var body = document.getElementById('condBody'); if(!body) return;
+  var skills = c.skills || defaultConfig.skills;
+  body.innerHTML = skills.map(function(s){
+    return '<tr class="cond-row" data-msg="'+escAttr(s.tools)+'">'+
+      '<td class="cond-type">'+escHtml(s.label)+'</td>'+
+      '<td class="cond-status"><span class="pill"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="pill-text">Unknown</span></span></td>'+
+      '<td class="cond-msg"></td></tr>';
+  }).join('');
+}
+
+function renderEducation(c){
+  var el = document.getElementById('educationList'); if(!el) return;
+  var edu = c.education || defaultConfig.education;
+  el.innerHTML = edu.map(function(e){
+    return '<div class="volume-box">'+
+      '<div><span class="k">Degree:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="v">'+escHtml(e.degree)+'</span></div>'+
+      '<div><span class="k">Institution:</span><span class="v"> '+escHtml(e.institution)+'</span></div>'+
+      '<div><span class="k">Duration:&nbsp;&nbsp;&nbsp;</span><span class="v">'+escHtml(e.duration)+'</span></div>'+
+      (e.score?'<div><span class="k">Score:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="v">'+escHtml(e.score)+'</span></div>':'')+
+      '<div><span class="k">Level:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="v">'+escHtml(e.level)+'</span></div>'+
+      '</div>';
+  }).join('');
+}
+
+function escAttr(s){ return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;'); }
+
+function renderProjects(artifacts){
+  var list = document.getElementById('projectsList');
+  if(!list) return;
+  list.innerHTML = '';
+  if(!artifacts || !artifacts.length){
+    list.innerHTML = '<p style="color:var(--text-faint);font-family:var(--font-mono);font-size:14px;">No projects configured.</p>';
+    return;
+  }
+  artifacts.forEach(function(art){
+    var card = document.createElement('div');
+    card.className = 'project-card';
+    var tags = (art.stack||'').split('·').filter(Boolean);
+    var tagHtml = tags.map(function(t){
+      return '<span class="k8s-label" style="font-size:12px;padding:3px 9px;">'+escHtml(t.trim())+'</span>';
+    }).join('');
+    var links = '';
+    if(art.github) links += '<a class="proj-link" href="'+escHtml(art.github)+'" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>GitHub ↗</a>';
+    if(art.live)   links += '<a class="proj-link" href="'+escHtml(art.live)+'" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Live ↗</a>';
+    card.innerHTML =
+      '<div class="proj-cat">'+escHtml(art.category||'Project')+'</div>'+
+      '<div class="proj-title">'+escHtml(art.name||'Untitled')+'</div>'+
+      '<div class="proj-desc">'+escHtml(art.desc||'')+'</div>'+
+      (tagHtml ? '<div class="proj-tags">'+tagHtml+'</div>' : '')+
+      (links ? '<div class="proj-links">'+links+'</div>' : '');
+    list.appendChild(card);
+  });
+}
+
+applyConfig(cfg);
+
+/* ════════════════════════════════════════════════════
+   Copy email
+════════════════════════════════════════════════════ */
+function copyEmail(btn){
+  var email = document.getElementById('contactEmail').textContent.trim() ||
+              (cfg && cfg.contactEmail) || 'vigneshprabhuvp44@gmail.com';
+  navigator.clipboard.writeText(email).then(function(){
+    var orig = btn.textContent;
+    btn.textContent = 'copied'; btn.classList.add('copied');
+    setTimeout(function(){ btn.textContent = orig; btn.classList.remove('copied'); }, 1600);
+  });
+}
+
+/* ════════════════════════════════════════════════════
+   View counter
+════════════════════════════════════════════════════ */
+try{
+  var v = parseInt(localStorage.getItem('vp-views')||'0',10);
+  localStorage.setItem('vp-views', String(v+1));
+}catch(e){}
+
+/* ════════════════════════════════════════════════════
+   Escape HTML
+════════════════════════════════════════════════════ */
+function escHtml(s){
+  var d = document.createElement('div'); d.textContent = s||''; return d.innerHTML;
+}
+
+/* ════════════════════════════════════════════════════
+   Live age counter for current role
+════════════════════════════════════════════════════ */
+var engStart = new Date('2025-10-01T09:00:00+05:30'); // updated by renderExperience if config has a running entry
+function getAge(){
+  var now = new Date();
+  var y = now.getFullYear() - engStart.getFullYear();
+  var mo = now.getMonth() - engStart.getMonth();
+  var d  = now.getDate() - engStart.getDate();
+  if(d < 0) mo--;
+  if(mo < 0){ y--; mo += 12; }
+  var parts = [];
+  if(y  > 0) parts.push(y  + 'y');
+  if(mo > 0) parts.push(mo + 'm');
+  return parts.join(' ') || '< 1m';
+}
+function renderAge(){
+  document.querySelectorAll('.age-cell').forEach(function(el){ el.textContent = getAge(); });
+}
+renderAge();
+setInterval(renderAge, 3600000);
+
+/* ════════════════════════════════════════════════════
+   Particles
+════════════════════════════════════════════════════ */
+(function(){
+  var field = document.getElementById('particleField');
+  if(!field) return;
+  var positions = [8,18,30,46,60,72,84,93];
+  var durations  = [9,11,8,10,12,9.5,10.5,8.5];
+  var delays     = [0,1.5,3,0.7,2.2,4,1.1,2.8];
+  positions.forEach(function(left,i){
+    var p = document.createElement('span');
+    p.className = 'particle';
+    p.style.left = left + '%';
+    p.style.animationDuration  = durations[i] + 's';
+    p.style.animationDelay     = delays[i] + 's';
+    p.style.animationName      = 'particle-rise';
+    field.appendChild(p);
+  });
+})();
+
+/* ════════════════════════════════════════════════════
+   Matrix rain
+════════════════════════════════════════════════════ */
+(function(){
+  var canvas = document.getElementById('matrixCanvas');
+  if(!canvas) return;
+  var rm = window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  if(rm) return;
+
+  var ctx = canvas.getContext('2d');
+  var glyphs = '01{}[]()<>/\\$#ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  var words  = ['kubectl','pod','svc','eks','aws','gcp','git','ssh','run','sudo','helm','yaml','deploy','apply'];
+  var fs = 15;
+  var w, h, cols, drops, streams;
+
+  function maybeWord(){
+    return Math.random() > 0.92 ? { word:words[Math.floor(Math.random()*words.length)].toUpperCase(), sr:0 } : null;
+  }
+
+  function resize(){
+    w = canvas.width  = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+    cols   = Math.ceil(w / fs);
+    drops  = new Array(cols).fill(0).map(function(){ return Math.random()*-100; });
+    streams = new Array(cols).fill(null);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  var accentColor  = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()  || '#4C8DFF';
+  var runningColor = getComputedStyle(document.documentElement).getPropertyValue('--running').trim() || '#3DD68C';
+
+  function draw(){
+    ctx.fillStyle = 'rgba(11,14,19,0.09)';
+    ctx.fillRect(0, 0, w, h);
+    ctx.font = fs + 'px "Fira Code", monospace';
+
+    for(var i = 0; i < cols; i++){
+      var x = i * fs, y = drops[i] * fs;
+      if(!streams[i] && drops[i] >= 0){
+        streams[i] = maybeWord();
+        if(streams[i]) streams[i].sr = drops[i];
+      }
+      var glyph, isWord = false;
+      var s = streams[i];
+      if(s){
+        var idx = Math.floor(drops[i] - s.sr);
+        if(idx >= 0 && idx < s.word.length){ glyph = s.word.charAt(idx); isWord = true; }
+        else if(idx >= s.word.length){ streams[i] = null; glyph = glyphs[Math.floor(Math.random()*glyphs.length)]; }
+        else glyph = glyphs[Math.floor(Math.random()*glyphs.length)];
+      } else {
+        glyph = glyphs[Math.floor(Math.random()*glyphs.length)];
+      }
+      ctx.fillStyle   = isWord ? runningColor : accentColor;
+      ctx.globalAlpha = isWord ? 0.7 : 0.38;
+      ctx.fillText(glyph, x, y);
+      ctx.globalAlpha = 1;
+      if(y > h && Math.random() > 0.975){ drops[i] = 0; streams[i] = null; }
+      drops[i]++;
+    }
+  }
+
+  var last = 0;
+  function loop(now){
+    if(now - last > 72){ draw(); last = now; }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+})();
+
+/* ════════════════════════════════════════════════════
+   Boot sequence — centered overlay: ls → career → careerctl start → fade out
+════════════════════════════════════════════════════ */
+(function(){
+  var overlay = document.getElementById('bootOverlay');
+  var area    = document.getElementById('bootCmdArea');
+  if(!area) return;
+  var rm     = window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  var booted = sessionStorage.getItem('vp-booted') === '1';
+
+  function dismissOverlay(){
+    document.documentElement.classList.remove('pre-reveal');
+    document.removeEventListener('keydown', skip);
+    document.removeEventListener('click',   skip);
+    if(rm){
+      if(overlay) overlay.style.display = 'none';
+      document.documentElement.classList.remove('boot-lock');
+      sessionStorage.setItem('vp-booted','1');
+    } else {
+      if(overlay){ overlay.classList.add('exiting'); }
+      setTimeout(function(){
+        if(overlay) overlay.style.display = 'none';
+        document.documentElement.classList.remove('boot-lock');
+        sessionStorage.setItem('vp-booted','1');
+      }, 550);
+    }
+  }
+
+  if(rm || booted){
+    if(overlay) overlay.style.display = 'none';
+    document.documentElement.classList.remove('boot-lock','pre-reveal');
+    sessionStorage.setItem('vp-booted','1');
+    return;
+  }
+
+  document.documentElement.classList.add('boot-lock');
+  var cancelled = false, timers = [];
+  function track(fn, d){ var id = setTimeout(fn, d); timers.push(id); return id; }
+
+  function renderFinal(){
+    area.innerHTML =
+      '<div class="cmd-line"><span class="cmd-prompt">$</span><span class="cmd-text">ls</span></div>' +
+      '<div class="cmd-line"><span class="cmd-file">career</span></div>' +
+      '<div class="cmd-line"></div>' +
+      '<div class="cmd-line"><span class="cmd-prompt">$</span><span class="cmd-text">careerctl start vigneshprabhu</span></div>' +
+      '<div class="cmd-line"><span class="cmd-info-text">[info] loading career/vigneshprabhu...</span></div>' +
+      '<div class="cmd-line"><span class="cmd-ok-text">[ ok ] profile    · verified</span></div>' +
+      '<div class="cmd-line"><span class="cmd-ok-text">[ ok ] cluster    · running</span></div>';
+  }
+
+  function skip(){
+    if(cancelled) return;
+    cancelled = true; timers.forEach(clearTimeout); renderFinal(); dismissOverlay();
+  }
+  document.addEventListener('keydown', skip);
+  document.addEventListener('click',   skip);
+
+  var activeText = null, activeCursor = null;
+
+  function newCmdLine(){
+    var line = document.createElement('div');
+    line.className = 'cmd-line';
+    var p = document.createElement('span');
+    p.className = 'cmd-prompt'; p.textContent = '$';
+    activeText = document.createElement('span');
+    activeText.className = 'cmd-text';
+    activeCursor = document.createElement('span');
+    activeCursor.className = 'cmd-cursor';
+    line.appendChild(p); line.appendChild(activeText); line.appendChild(activeCursor);
+    area.appendChild(line);
+  }
+
+  function typeCmd(text, onDone){
+    newCmdLine();
+    var i = 0;
+    function next(){
+      if(cancelled) return;
+      if(i < text.length){
+        activeText.textContent += text.charAt(i++);
+        track(next, 50 + Math.random()*40 - 8);
+      } else {
+        activeCursor.remove();
+        track(onDone, 200);
+      }
+    }
+    track(next, 0);
+  }
+
+  function addLine(text, cls, delay, cb){
+    track(function(){
+      if(cancelled) return;
+      var line = document.createElement('div');
+      line.className = 'cmd-line';
+      if(text){
+        var span = document.createElement('span');
+        span.className = cls || 'cmd-text';
+        span.textContent = text;
+        line.appendChild(span);
+      }
+      area.appendChild(line);
+      if(cb) cb();
+    }, delay || 0);
+  }
+
+  // ── Sequence ──
+  track(function(){
+    typeCmd('ls', function(){
+      addLine('career', 'cmd-file', 60, function(){
+        addLine('', '', 80, function(){
+          track(function(){
+            typeCmd('careerctl start vigneshprabhu', function(){
+              addLine('[info] loading career/vigneshprabhu...', 'cmd-info-text', 80, function(){
+                addLine('[ ok ] profile    · verified', 'cmd-ok-text', 230, function(){
+                  addLine('[ ok ] cluster    · running', 'cmd-ok-text', 230, function(){
+                    track(dismissOverlay, 560);
+                  });
+                });
+              });
+            });
+          }, 300);
+        });
+      });
+    });
+  }, 350);
+})();
+
+/* ════════════════════════════════════════════════════
+   Section reveal + skills flip + scroll spy
+════════════════════════════════════════════════════ */
+var sections  = document.querySelectorAll('.section');
+var navLinks  = document.querySelectorAll('.cmdnav a');
+var rmPref    = window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+var secObs = new IntersectionObserver(function(entries){
+  entries.forEach(function(e){
+    if(!e.isIntersecting) return;
+    var el = e.target;
+    el.classList.add('in');
+    // flip skills conditions
+    if(el.id === 'skills'){
+      el.querySelectorAll('.cond-row').forEach(function(row, i){
+        setTimeout(function(){
+          row.classList.add('ready');
+          row.querySelector('.pill-text').textContent = 'Ready';
+          row.querySelector('.cond-msg').textContent = row.dataset.msg;
+        }, rmPref ? 0 : 200 + i * 140);
+      });
+    }
+    secObs.unobserve(el);
+  });
+}, { threshold: 0.13 });
+sections.forEach(function(s){ secObs.observe(s); });
+
+if(rmPref){
+  sections.forEach(function(s){ s.classList.add('in'); });
+  document.querySelectorAll('.cond-row').forEach(function(row){
+    row.classList.add('ready');
+    row.querySelector('.pill-text').textContent = 'Ready';
+    row.querySelector('.cond-msg').textContent = row.dataset.msg;
+  });
+}
+
+// Scroll spy
+function updateSpy(){
+  var current = sections[0] ? sections[0].id : '';
+  sections.forEach(function(s){ if(s.getBoundingClientRect().top <= 120) current = s.id; });
+  if(window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2 && sections.length){
+    current = sections[sections.length-1].id;
+  }
+  navLinks.forEach(function(l){ l.classList.toggle('active', l.dataset.target === current); });
+}
+var ticking = false;
+window.addEventListener('scroll', function(){
+  if(!ticking){ requestAnimationFrame(function(){ updateSpy(); ticking = false; }); ticking = true; }
+});
+updateSpy();
+</script>
+</body>
+</html>
