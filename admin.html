@@ -187,14 +187,29 @@
         <span class="lock-terminal-title">bash — 80×24</span>
       </div>
       <div class="lock-terminal-body">
-        <div class="term-line"><span class="prompt">$</span> control-plane authenticate</div>
-        <div class="term-line" style="color:var(--text-faint);margin-bottom:16px;">Enter PIN to unlock admin access.</div>
-        <div class="pin-field">
-          <span class="pin-label">Access PIN</span>
-          <input type="password" id="pinInput" placeholder="••••" inputmode="numeric" maxlength="8" autocomplete="current-password">
+        <!-- Step 1: PIN -->
+        <div id="pinStep">
+          <div class="term-line"><span class="prompt">$</span> control-plane authenticate --step=1/2</div>
+          <div class="term-line" style="color:var(--text-faint);margin-bottom:16px;">Enter PIN to proceed.</div>
+          <div class="pin-field">
+            <span class="pin-label">Access PIN</span>
+            <input type="password" id="pinInput" placeholder="••••" inputmode="numeric" maxlength="8" autocomplete="current-password">
+          </div>
+          <div class="pin-error" id="pinError"></div>
+          <div id="lockoutMsg" style="color:#FF6B6B;font-size:13px;margin-top:8px;display:none;"></div>
+          <button class="lock-btn" id="pinSubmit">next →</button>
         </div>
-        <div class="pin-error" id="pinError"></div>
-        <button class="lock-btn" id="pinSubmit">unlock →</button>
+        <!-- Step 2: TOTP -->
+        <div id="totpStep" style="display:none;">
+          <div class="term-line"><span class="prompt">$</span> control-plane authenticate --step=2/2</div>
+          <div class="term-line" style="color:var(--text-faint);margin-bottom:16px;">Enter 6-digit code from your authenticator app.</div>
+          <div class="pin-field">
+            <span class="pin-label">Authenticator Code</span>
+            <input type="text" id="totpInput" placeholder="000000" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
+          </div>
+          <div class="pin-error" id="totpError"></div>
+          <button class="lock-btn" id="totpSubmit">unlock →</button>
+        </div>
       </div>
     </div>
     <div class="lock-foot">session-only · <a href="index.html" target="_blank" rel="noopener">view site ↗</a></div>
@@ -228,6 +243,8 @@
       <div class="nav-item" data-pane="contact"><span class="ni"></span>Contact</div>
       <div class="nav-section">Data</div>
       <div class="nav-item" data-pane="analytics"><span class="ni"></span>Analytics</div>
+      <div class="nav-section">Settings</div>
+      <div class="nav-item" data-pane="security"><span class="ni"></span>Security / MFA</div>
     </nav>
 
     <div class="sidebar-foot">
@@ -430,6 +447,42 @@
         </div>
       </section>
 
+      <!-- SECURITY / MFA -->
+      <section class="pane" data-pane="security">
+        <div class="pane-title">Security / MFA</div>
+        <p class="pane-desc">Set up Time-based One-Time Password (TOTP) with Google Authenticator, Authy, or any TOTP app.</p>
+
+        <div class="pane-section-label">Authenticator Setup</div>
+        <p class="pane-desc" style="margin-bottom:20px;">Scan the QR code or enter the key manually. After setup, every login will require your PIN <b>+</b> a 6-digit code from the app.</p>
+
+        <div style="display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap;">
+          <div>
+            <img id="mfaQr" src="" alt="TOTP QR Code" style="width:180px;height:180px;border-radius:10px;border:1px solid var(--border);display:block;">
+            <div style="font-size:11px;color:var(--text-faint);text-align:center;margin-top:6px;">Scan with your app</div>
+          </div>
+          <div style="flex:1;min-width:220px;">
+            <div class="field" style="margin-bottom:16px;">
+              <label>Secret key (manual entry)</label>
+              <div id="mfaSecret" style="font-family:var(--font-mono);font-size:13px;letter-spacing:.15em;padding:12px 14px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;"></div>
+            </div>
+            <div class="field">
+              <label>Steps</label>
+              <div style="font-size:13px;color:var(--text-dim);line-height:1.8;">
+                1. Open Google Authenticator or Authy<br>
+                2. Tap <b>+</b> → <b>Enter a setup key</b><br>
+                3. Account name: <code style="font-family:var(--font-mono);">vigneshprabhu</code><br>
+                4. Key: paste the secret above<br>
+                5. Type: <b>Time based</b> → Save
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:20px;padding:14px 16px;background:rgba(255,107,107,0.08);border:1px solid rgba(255,107,107,0.25);border-radius:8px;font-size:13px;color:var(--text-dim);">
+          Keep your GitHub repository <b>private</b> — the TOTP secret lives in the source code.
+        </div>
+      </section>
+
     </div>
   </div>
 </div>
@@ -441,6 +494,7 @@
 var STORAGE_KEY = 'vp-config';
 var VIEWS_KEY   = 'vp-views';
 var ADMIN_PIN   = '2580';
+var TOTP_SECRET = 'KVHFKRCUNBQUYNYBMFWGS5DJMNQWYZNB';
 
 var defaultArtifacts = [
   { id:'a1', name:'Divi — Cloud Operations Assistant', category:'DevOps Automation',
@@ -571,6 +625,34 @@ function flashSave(ids, ok){
 ═══════════════════════════════════════════════════ */
 var LOCK_KEY    = 'vp-admin-lock';
 var ATTEMPT_KEY = 'vp-admin-attempts';
+
+/* ─── TOTP (RFC 6238) via Web Crypto API ─── */
+function base32Decode(s){
+  var alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567', bs = 0, bv = 0, out = [];
+  for(var i = 0; i < s.length; i++){
+    var idx = alpha.indexOf(s[i].toUpperCase()); if(idx < 0) continue;
+    bv = (bv << 5) | idx; bs += 5;
+    if(bs >= 8){ out.push((bv >>> (bs - 8)) & 255); bs -= 8; }
+  }
+  return new Uint8Array(out);
+}
+async function genTotp(offset){
+  var keyBytes = base32Decode(TOTP_SECRET);
+  var ctr = Math.floor(Date.now() / 1000 / 30) + (offset || 0);
+  var cb = new Uint8Array(8);
+  for(var i = 7; i >= 0; i--){ cb[i] = ctr & 0xff; ctr = Math.floor(ctr / 256); }
+  var key = await crypto.subtle.importKey('raw', keyBytes, { name:'HMAC', hash:'SHA-1' }, false, ['sign']);
+  var sig = new Uint8Array(await crypto.subtle.sign('HMAC', key, cb));
+  var off = sig[sig.length - 1] & 0x0f;
+  var code = ((sig[off] & 0x7f) << 24) | (sig[off+1] << 16) | (sig[off+2] << 8) | sig[off+3];
+  return String(code % 1000000).padStart(6, '0');
+}
+async function checkTotp(input){
+  for(var w = -1; w <= 1; w++){
+    if(input === await genTotp(w)) return true;
+  }
+  return false;
+}
 var lockTimer   = null;
 
 function getLockUntil(){ try{ return parseInt(localStorage.getItem(LOCK_KEY)||'0',10)||0; }catch(e){ return 0; } }
@@ -582,18 +664,12 @@ function startLockCountdown(until){
   var pinInput  = document.getElementById('pinInput');
   var pinSubmit = document.getElementById('pinSubmit');
   var pinError  = document.getElementById('pinError');
+  var msg       = document.getElementById('lockoutMsg');
   pinInput.disabled  = true;
   pinSubmit.disabled = true;
   pinInput.value     = '';
   pinError.textContent = '';
-
-  var msg = document.getElementById('lockoutMsg');
-  if(!msg){
-    msg = document.createElement('div');
-    msg.id = 'lockoutMsg';
-    msg.style.cssText = 'margin-top:16px;padding:14px 16px;background:rgba(255,90,90,0.09);border:1px solid rgba(255,90,90,0.28);border-radius:8px;font-family:var(--font-mono);font-size:12px;color:var(--danger);text-align:center;line-height:1.7;';
-    document.querySelector('.lock-terminal-body').appendChild(msg);
-  }
+  msg.style.cssText = 'margin-top:8px;padding:12px 14px;background:rgba(255,90,90,0.09);border:1px solid rgba(255,90,90,0.28);border-radius:8px;font-family:var(--font-mono);font-size:12px;color:#FF6B6B;text-align:center;line-height:1.7;display:block;';
 
   function tick(){
     var rem = until - Date.now();
@@ -602,7 +678,8 @@ function startLockCountdown(until){
       clearLock();
       pinInput.disabled  = false;
       pinSubmit.disabled = false;
-      msg.remove();
+      msg.style.display  = 'none';
+      msg.textContent    = '';
       pinInput.focus();
       return;
     }
@@ -623,9 +700,10 @@ function tryUnlock(){
 
   if(val === ADMIN_PIN){
     clearLock();
-    document.getElementById('lockScreen').classList.add('hidden');
-    document.getElementById('appShell').classList.remove('hidden');
-    boot();
+    document.getElementById('pinStep').style.display = 'none';
+    document.getElementById('totpStep').style.display = '';
+    document.getElementById('totpInput').value = '';
+    document.getElementById('totpInput').focus();
   } else {
     document.getElementById('pinInput').value = '';
     var attempts = getAttempts() + 1;
@@ -644,6 +722,33 @@ function tryUnlock(){
   }
 }
 
+async function tryVerifyTotp(){
+  var code = document.getElementById('totpInput').value.replace(/\s/g, '');
+  document.getElementById('totpError').textContent = '';
+  if(code.length !== 6){ document.getElementById('totpError').textContent = 'Enter the 6-digit code.'; return; }
+  var valid = await checkTotp(code);
+  if(valid){
+    document.getElementById('lockScreen').classList.add('hidden');
+    document.getElementById('appShell').classList.remove('hidden');
+    boot();
+  } else {
+    document.getElementById('totpError').textContent = 'Invalid code — try again or wait for the next code.';
+    document.getElementById('totpInput').value = '';
+    document.getElementById('totpInput').focus();
+  }
+}
+
+function resetToLockScreen(){
+  document.getElementById('appShell').classList.add('hidden');
+  document.getElementById('lockScreen').classList.remove('hidden');
+  document.getElementById('pinInput').value = '';
+  document.getElementById('pinError').textContent = '';
+  document.getElementById('totpError').textContent = '';
+  document.getElementById('totpInput').value = '';
+  document.getElementById('pinStep').style.display = '';
+  document.getElementById('totpStep').style.display = 'none';
+}
+
 // Check lock on page load
 (function(){
   var until = getLockUntil();
@@ -652,12 +757,9 @@ function tryUnlock(){
 
 document.getElementById('pinSubmit').onclick = tryUnlock;
 document.getElementById('pinInput').addEventListener('keydown', function(e){ if(e.key==='Enter') tryUnlock(); });
-document.getElementById('lockBtn').onclick = function(){
-  document.getElementById('appShell').classList.add('hidden');
-  document.getElementById('lockScreen').classList.remove('hidden');
-  document.getElementById('pinInput').value = '';
-  document.getElementById('pinError').textContent = '';
-};
+document.getElementById('totpSubmit').onclick = tryVerifyTotp;
+document.getElementById('totpInput').addEventListener('keydown', function(e){ if(e.key==='Enter') tryVerifyTotp(); });
+document.getElementById('lockBtn').onclick = resetToLockScreen;
 
 /* ═══════════════════════════════════════════════════
    Navigation
@@ -682,6 +784,15 @@ function boot(){
   config = loadConfig();
   populateForm(config);
   refreshOverview();
+  initMfaSetup();
+}
+
+function initMfaSetup(){
+  var secret = TOTP_SECRET;
+  var grouped = secret.match(/.{1,4}/g).join(' ');
+  document.getElementById('mfaSecret').textContent = grouped;
+  var uri = 'otpauth://totp/control-plane:vigneshprabhu?secret=' + secret + '&issuer=control-plane&algorithm=SHA1&digits=6&period=30';
+  document.getElementById('mfaQr').src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(uri);
 }
 
 function populateForm(cfg){
