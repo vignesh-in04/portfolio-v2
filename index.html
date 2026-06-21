@@ -372,7 +372,7 @@
 
   <div class="console-header">
     <div class="cmdline-area">
-      <div class="cmd-line"><span class="cmd-prompt">$</span><span class="cmd-text">careerctl start vigneshprabhu</span></div>
+      <div class="cmd-line"><span class="cmd-prompt">$</span><span class="cmd-text">careerctl status vigneshprabhu</span></div>
     </div>
   </div>
 
@@ -382,7 +382,7 @@
       <div class="role-line"><span class="dot"></span>DevOps Engineer</div>
       <p class="hero-tagline" id="heroTagline">Keeping cloud infrastructure <b style="color:var(--text)">Running</b>, not just deployed.</p>
       <div class="hero-cta">
-        <a class="btn btn-primary" href="#metadata">Describe projects ↓</a>
+        <a class="btn btn-primary" href="#projects">Describe projects ↓</a>
         <a class="btn btn-ghost"   href="#contact">Contact →</a>
       </div>
       <div class="hero-impact">
@@ -404,6 +404,9 @@
     <a href="#contact"    data-target="contact"><span class="ni">▸</span>contact</a>
   </div>
 </nav>
+
+<!-- full-width wrapper blocks canvas bleed-through on sides -->
+<div style="position:relative;z-index:1;background:var(--bg);">
 
 <!-- ── metadata ── -->
 <section class="section" id="metadata">
@@ -454,6 +457,8 @@
     <div id="phoneRow" style="display:none"><span class="key">contact.phone:&nbsp;&nbsp;&nbsp;</span><span id="contactPhone"></span></div>
   </div>
 </section>
+
+</div><!-- /content wrapper -->
 
 <footer>
   <span>vigneshprabhu / career</span>
@@ -920,7 +925,7 @@ setInterval(renderAge, 3600000);
       '<div class="cmd-line"><span class="cmd-prompt">$</span><span class="cmd-text">ls</span></div>' +
       '<div class="cmd-line"><span class="cmd-file">career</span></div>' +
       '<div class="cmd-line"></div>' +
-      '<div class="cmd-line"><span class="cmd-prompt">$</span><span class="cmd-text">careerctl start vigneshprabhu</span></div>' +
+      '<div class="cmd-line"><span class="cmd-prompt">$</span><span class="cmd-text">careerctl status vigneshprabhu</span></div>' +
       '<div class="cmd-line"><span class="cmd-info-text">[info] loading career/vigneshprabhu...</span></div>' +
       '<div class="cmd-line"><span class="cmd-ok-text">[ ok ] profile    · verified</span></div>' +
       '<div class="cmd-line"><span class="cmd-ok-text">[ ok ] cluster    · running</span></div>';
@@ -990,7 +995,13 @@ setInterval(renderAge, 3600000);
               addLine('[info] loading career/vigneshprabhu...', 'cmd-info-text', 80, function(){
                 addLine('[ ok ] profile    · verified', 'cmd-ok-text', 230, function(){
                   addLine('[ ok ] cluster    · running', 'cmd-ok-text', 230, function(){
-                    track(dismissOverlay, 560);
+                    addLine('', '', 100, function(){
+                      track(function(){
+                        typeCmd('careerctl status vigneshprabhu', function(){
+                          track(dismissOverlay, 400);
+                        });
+                      }, 200);
+                    });
                   });
                 });
               });
