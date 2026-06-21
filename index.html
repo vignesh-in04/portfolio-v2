@@ -168,12 +168,17 @@
     position:sticky; top:0; z-index:50;
     background:rgba(11,14,19,.92); backdrop-filter:blur(8px);
     border-bottom:1px solid var(--border);
+  }
+  .cmdnav-inner{
+    max-width:var(--maxw); margin:0 auto; padding:13px 24px;
+    display:flex; gap:24px; font-family:var(--font-mono); font-size:15px;
     overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch;
   }
-  .cmdnav::-webkit-scrollbar{ display:none; }
-  .cmdnav-inner{
-    padding:13px 24px; width:max-content; min-width:100%;
-    display:flex; gap:24px; font-family:var(--font-mono); font-size:15px;
+  .cmdnav-inner::-webkit-scrollbar{ display:none; }
+  @media(max-width:700px){
+    .cmdnav{ overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+    .cmdnav::-webkit-scrollbar{ display:none; }
+    .cmdnav-inner{ max-width:none; margin:0; width:max-content; min-width:100%; overflow-x:visible; }
   }
   .cmdnav a{ color:var(--text-faint); white-space:nowrap; transition:color .2s; }
   .cmdnav a .ni{ color:var(--accent); font-weight:700; margin-right:5px; }
@@ -579,7 +584,22 @@ async function loadConfig(){
 }
 
 // Async init — fetch remote config then render
-loadConfig().then(function(cfg){ applyConfig(cfg); });
+loadConfig().then(function(cfg){
+  applyConfig(cfg);
+  // If skills section already revealed before config loaded, flip conditions now
+  var skillsSec = document.getElementById('skills');
+  if(skillsSec && skillsSec.classList.contains('in')){
+    skillsSec.querySelectorAll('.cond-row').forEach(function(row, i){
+      setTimeout(function(){
+        row.classList.add('ready');
+        var pt = row.querySelector('.pill-text');
+        var cm = row.querySelector('.cond-msg');
+        if(pt) pt.textContent = 'Ready';
+        if(cm) cm.textContent = row.dataset.msg;
+      }, 200 + i * 140);
+    });
+  }
+});
 var cfg = null; // kept for legacy refs below
 
 /* ════════════════════════════════════════════════════
